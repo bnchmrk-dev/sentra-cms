@@ -1,7 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { Building2, Plus, Globe, Trash2, Users, Loader2, ChevronRight } from "lucide-react";
-import { useCompanies, useDeleteCompany } from "../../../hooks";
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import {
+  Building2,
+  Plus,
+  Globe,
+  Trash2,
+  Users,
+  Loader2,
+  ChevronRight,
+} from 'lucide-react'
+import { useCompanies, useDeleteCompany } from '../../../hooks'
 import {
   Card,
   Button,
@@ -15,24 +23,24 @@ import {
   TableRow,
   TableCell,
   IconButton,
-} from "../../../components/ui";
-import { PageHeader } from "../../../components/layout";
-import type { Company } from "../../../schemas";
+} from '../../../components/ui'
+import { PageHeader } from '../../../components/layout'
+import type { Company } from '../../../schemas'
 
-export const Route = createFileRoute("/_authenticated/companies/")({
+export const Route = createFileRoute('/_authenticated/companies/')({
   component: CompaniesPage,
-});
+})
 
 function CompaniesPage() {
-  const { data, isLoading, error } = useCompanies();
-  const [deleteTarget, setDeleteTarget] = useState<Company | null>(null);
+  const { data, isLoading, error } = useCompanies()
+  const [deleteTarget, setDeleteTarget] = useState<Company | null>(null)
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -40,17 +48,17 @@ function CompaniesPage() {
       <Alert variant="error" title="Error loading companies">
         {error.message}
       </Alert>
-    );
+    )
   }
 
-  const companies = data?.companies || [];
+  const companies = data?.companies || []
 
   return (
     <div className="animate-fade-in">
       <PageHeader
         title="Companies"
         description="Manage companies and their authorized domains."
-        action={
+        actions={
           <Link to="/companies/new">
             <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
               Add Company
@@ -100,7 +108,7 @@ function CompaniesPage() {
                           {company.name}
                         </p>
                         <p className="text-xs text-text-muted">
-                          Created{" "}
+                          Created{' '}
                           {new Date(company.createdAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -170,30 +178,30 @@ function CompaniesPage() {
         onClose={() => setDeleteTarget(null)}
       />
     </div>
-  );
+  )
 }
 
 // Delete Company Modal
 interface DeleteCompanyModalProps {
-  company: Company | null;
-  onClose: () => void;
+  company: Company | null
+  onClose: () => void
 }
 
 function DeleteCompanyModal({ company, onClose }: DeleteCompanyModalProps) {
-  const deleteCompany = useDeleteCompany();
+  const deleteCompany = useDeleteCompany()
 
-  if (!company) return null;
+  if (!company) return null
 
   const handleDelete = async () => {
     try {
-      await deleteCompany.mutateAsync(company.id);
-      onClose();
+      await deleteCompany.mutateAsync(company.id)
+      onClose()
     } catch {
       // Error handled by mutation
     }
-  };
+  }
 
-  const hasUsers = (company._count?.users || 0) > 0;
+  const hasUsers = (company._count?.users || 0) > 0
 
   return (
     <ConfirmModal
@@ -206,10 +214,9 @@ function DeleteCompanyModal({ company, onClose }: DeleteCompanyModalProps) {
           ? `Cannot delete "${company.name}" because it has ${company._count?.users} active user(s). Remove all users first.`
           : `Are you sure you want to delete "${company.name}"? This will also remove all associated domains.`
       }
-      confirmText={hasUsers ? "OK" : "Delete Company"}
-      confirmVariant={hasUsers ? "primary" : "danger"}
+      confirmText={hasUsers ? 'OK' : 'Delete Company'}
+      confirmVariant={hasUsers ? 'primary' : 'danger'}
       isLoading={deleteCompany.isPending}
     />
-  );
+  )
 }
-

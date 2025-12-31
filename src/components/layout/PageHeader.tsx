@@ -1,16 +1,16 @@
-import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import type { ReactNode } from 'react'
+import { Link } from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react'
 
 interface PageHeaderProps {
-  title: string;
-  description?: string;
+  title: string
+  description?: string
   backLink?: {
-    label: string;
-    href: string;
-  };
-  badge?: ReactNode;
-  actions?: ReactNode;
+    label: string
+    href: string
+  }
+  badge?: ReactNode
+  actions?: ReactNode
 }
 
 export function PageHeader({
@@ -44,6 +44,5 @@ export function PageHeader({
         {actions && <div className="flex items-center gap-3">{actions}</div>}
       </div>
     </div>
-  );
+  )
 }
-

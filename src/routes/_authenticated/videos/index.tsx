@@ -1,7 +1,17 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { Video, Plus, Trash2, Loader2, ChevronRight, Calendar, Play, Globe2, Building2 } from "lucide-react";
-import { useVideos, useDeleteVideo } from "../../../hooks";
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import {
+  Video,
+  Plus,
+  Trash2,
+  Loader2,
+  ChevronRight,
+  Calendar,
+  Play,
+  Globe2,
+  Building2,
+} from 'lucide-react'
+import { useVideos, useDeleteVideo } from '../../../hooks'
 import {
   Card,
   Button,
@@ -15,24 +25,26 @@ import {
   TableRow,
   TableCell,
   IconButton,
-} from "../../../components/ui";
-import { PageHeader } from "../../../components/layout";
-import type { VideoWithCompany } from "../../../schemas";
+} from '../../../components/ui'
+import { PageHeader } from '../../../components/layout'
+import type { VideoWithCompany } from '../../../schemas'
 
-export const Route = createFileRoute("/_authenticated/videos/")({
+export const Route = createFileRoute('/_authenticated/videos/')({
   component: VideosPage,
-});
+})
 
 function VideosPage() {
-  const { data, isLoading, error } = useVideos();
-  const [deleteTarget, setDeleteTarget] = useState<VideoWithCompany | null>(null);
+  const { data, isLoading, error } = useVideos()
+  const [deleteTarget, setDeleteTarget] = useState<VideoWithCompany | null>(
+    null,
+  )
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -40,30 +52,30 @@ function VideosPage() {
       <Alert variant="error" title="Error loading videos">
         {error.message}
       </Alert>
-    );
+    )
   }
 
-  const videos = data?.videos || [];
+  const videos = data?.videos || []
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
 
   const isPublished = (publishDate: string) => {
-    return new Date(publishDate) <= new Date();
-  };
+    return new Date(publishDate) <= new Date()
+  }
 
   return (
     <div className="animate-fade-in">
       <PageHeader
         title="Videos"
         description="Manage video content and uploads."
-        action={
+        actions={
           <Link to="/videos/new">
             <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
               Upload Video
@@ -131,12 +143,16 @@ function VideosPage() {
                     {video.company ? (
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-text-muted" />
-                        <span className="text-text-secondary text-sm">{video.company.name}</span>
+                        <span className="text-text-secondary text-sm">
+                          {video.company.name}
+                        </span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
                         <Globe2 className="w-4 h-4 text-accent" />
-                        <span className="text-accent text-sm font-medium">Everyone</span>
+                        <span className="text-accent text-sm font-medium">
+                          Everyone
+                        </span>
                       </div>
                     )}
                   </TableCell>
@@ -189,28 +205,28 @@ function VideosPage() {
         onClose={() => setDeleteTarget(null)}
       />
     </div>
-  );
+  )
 }
 
 // Delete Video Modal
 interface DeleteVideoModalProps {
-  video: VideoWithCompany | null;
-  onClose: () => void;
+  video: VideoWithCompany | null
+  onClose: () => void
 }
 
 function DeleteVideoModal({ video, onClose }: DeleteVideoModalProps) {
-  const deleteVideo = useDeleteVideo();
+  const deleteVideo = useDeleteVideo()
 
-  if (!video) return null;
+  if (!video) return null
 
   const handleDelete = async () => {
     try {
-      await deleteVideo.mutateAsync(video.id);
-      onClose();
+      await deleteVideo.mutateAsync(video.id)
+      onClose()
     } catch {
       // Error handled by mutation
     }
-  };
+  }
 
   return (
     <ConfirmModal
@@ -223,7 +239,5 @@ function DeleteVideoModal({ video, onClose }: DeleteVideoModalProps) {
       confirmVariant="danger"
       isLoading={deleteVideo.isPending}
     />
-  );
+  )
 }
-
-

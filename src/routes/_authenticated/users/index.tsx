@@ -86,7 +86,7 @@ function UsersPage() {
       <PageHeader
         title="Users"
         description="Manage all users and their access levels."
-        action={
+        actions={
           <Link to="/users/new">
             <Button variant="primary" leftIcon={<UserPlus className="w-4 h-4" />}>
               Add User
