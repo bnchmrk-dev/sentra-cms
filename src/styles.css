@@ -1,0 +1,650 @@
+@import "tailwindcss";
+
+/* ============================================
+   Sentra CMS - Theme Variables
+   Based on Sentra Brand Guidelines
+   ============================================ */
+
+@theme {
+  /* Background colors - Dark Grey #292929 based */
+  --color-bg-primary: #1a1a1a;
+  --color-bg-secondary: #1f1f1f;
+  --color-bg-surface: #252525;
+  --color-bg-elevated: #292929;
+  --color-bg-input: #2d2d2d;
+  --color-bg-hover: #363636;
+  --color-bg-active: #444444;
+
+  /* Border colors - Using Midweight Grey #444444 */
+  --color-border-subtle: #333333;
+  --color-border-default: #444444;
+  --color-border-strong: #555555;
+
+  /* Text colors - White #FFFFFF and Light Grey #ACB5C2 */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #ACB5C2;
+  --color-text-muted: #7a8594;
+  --color-text-inverse: #1a1a1a;
+
+  /* Accent colors - Light Blue #7CB2F8 (primary) */
+  --color-accent: #7CB2F8;
+  --color-accent-hover: #9AC4FA;
+  --color-accent-muted: rgba(124, 178, 248, 0.2);
+  --color-accent-subtle: rgba(124, 178, 248, 0.1);
+
+  /* Secondary accent - Midweight Blue #3032FA */
+  --color-accent-dark: #3032FA;
+  --color-accent-dark-muted: rgba(48, 50, 250, 0.2);
+
+  /* Status colors */
+  --color-status-live: #22c55e;
+  --color-status-live-bg: rgba(34, 197, 94, 0.12);
+  --color-status-review: #f59e0b;
+  --color-status-review-bg: rgba(245, 158, 11, 0.12);
+  --color-status-draft: #ACB5C2;
+  --color-status-draft-bg: rgba(172, 181, 194, 0.12);
+  --color-status-warning: #f59e0b;
+  --color-status-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-status-error: #ef4444;
+  --color-status-error-bg: rgba(239, 68, 68, 0.12);
+
+  /* Shadows - with blue accent glow */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+  --shadow-glow: 0 0 24px rgba(124, 178, 248, 0.25);
+  --shadow-glow-dark: 0 0 20px rgba(48, 50, 250, 0.2);
+
+  /* Spacing */
+  --spacing-sidebar: 240px;
+  --spacing-sidebar-collapsed: 64px;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-default: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* Font families - Sentra Brand: Arial Nova Bold for headings, Arial for body */
+  --font-sans: "Arial", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: "Arial Nova", "Arial Black", "Arial", sans-serif;
+  --font-logo: "Zen Dots", "Arial Black", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+  min-height: 100vh;
+}
+
+/* Headings use Arial Nova Bold */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* Logo text styling */
+.logo-text {
+  font-family: var(--font-logo);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================
+   Accent Color Utilities
+   ============================================ */
+
+/* Dark blue accent variant */
+.text-accent-dark {
+  color: var(--color-accent-dark);
+}
+
+.bg-accent-dark {
+  background-color: var(--color-accent-dark);
+}
+
+.bg-accent-dark-muted {
+  background-color: var(--color-accent-dark-muted);
+}
+
+/* Gradient backgrounds */
+.bg-gradient-brand {
+  background: linear-gradient(135deg, var(--color-accent-dark) 0%, var(--color-accent) 100%);
+}
+
+.bg-gradient-dark {
+  background: linear-gradient(180deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+}
+
+/* Subtle grid background pattern */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(var(--color-border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Glow effects */
+.glow-accent {
+  box-shadow: var(--shadow-glow);
+}
+
+.glow-accent-dark {
+  box-shadow: var(--shadow-glow-dark);
+}
+
+/* Hover glow transition */
+.hover-glow {
+  transition: box-shadow var(--transition-default);
+}
+
+.hover-glow:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
+/* ============================================
+   Focus States
+   ============================================ */
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   Selection
+   ============================================ */
+
+::selection {
+  background: var(--color-accent-muted);
+  color: var(--color-text-primary);
+}
+
+/* ============================================
+   Typography Utilities
+   ============================================ */
+
+.text-title {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.text-body {
+  color: var(--color-text-secondary);
+}
+
+.text-caption {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   Component Base Classes (Pure CSS)
+   ============================================ */
+
+/* Card */
+.card {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+}
+
+.card-elevated {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* Input base */
+.input-base {
+  background-color: var(--color-bg-input);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text-primary);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.input-base::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input-base:focus {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--color-accent-muted);
+}
+
+/* Button base styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all 150ms ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px var(--color-accent);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all 200ms ease;
+  cursor: pointer;
+  border: none;
+  background-color: var(--color-accent);
+  color: #ffffff;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent-hover);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all 150ms ease;
+  cursor: pointer;
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-default);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-bg-hover);
+  border-color: var(--color-border-strong);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all 150ms ease;
+  cursor: pointer;
+  border: none;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+.btn-ghost:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+/* Badge base styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: var(--color-status-live-bg);
+  color: var(--color-status-live);
+}
+
+.badge-review {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: var(--color-status-review-bg);
+  color: var(--color-status-review);
+}
+
+.badge-draft {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: var(--color-status-draft-bg);
+  color: var(--color-status-draft);
+}
+
+/* Table */
+.table-header {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table-row {
+  border-bottom: 1px solid var(--color-border-subtle);
+  transition: background-color 150ms ease;
+}
+
+.table-row:hover {
+  background-color: rgba(34, 34, 34, 0.5);
+}
+
+.table-cell {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Sidebar navigation item */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+  transition: all 150ms ease;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.nav-item-active {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-lg);
+  transition: all 150ms ease;
+  cursor: pointer;
+  background: linear-gradient(135deg, rgba(124, 178, 248, 0.15) 0%, rgba(124, 178, 248, 0.08) 100%);
+  color: var(--color-accent);
+  border-left: 2px solid var(--color-accent);
+}
+
+/* Tree structure */
+.tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  transition: background-color 150ms ease;
+  cursor: pointer;
+}
+
+.tree-item:hover {
+  background-color: var(--color-bg-hover);
+}
+
+.tree-connector {
+  border-left: 1px solid var(--color-border-default);
+  margin-left: 1rem;
+  padding-left: 1rem;
+}
+
+/* Alert/Warning banner */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+}
+
+.alert-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-status-warning-bg);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: var(--color-status-warning);
+}
+
+.alert-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-status-error-bg);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--color-status-error);
+}
+
+/* Dropdown/Select */
+.select {
+  background-color: var(--color-bg-input);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  color: var(--color-text-primary);
+  transition: border-color 150ms ease;
+  appearance: none;
+  background-repeat: no-repeat;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b6b6b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  cursor: pointer;
+}
+
+.select:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+/* Checkbox */
+.checkbox {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  border: 2px solid var(--color-border-default);
+  background-color: var(--color-bg-input);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.checkbox:hover {
+  border-color: var(--color-accent);
+}
+
+.checkbox:checked {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.checkbox:focus {
+  box-shadow: 0 0 0 3px var(--color-accent-muted);
+  outline: none;
+}
+
+/* Icon button */
+.icon-btn {
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  transition: all 150ms ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-hover);
+}
+
+/* Search input */
+.search-input {
+  background-color: var(--color-bg-input);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+  color: var(--color-text-primary);
+  width: 100%;
+  transition: border-color 150ms ease;
+}
+
+.search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.search-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+/* Divider */
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-border-subtle);
+  margin: 1rem 0;
+}
+
+/* ============================================
+   Animation Utilities
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-default) ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn var(--transition-default) ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
