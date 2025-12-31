@@ -7,6 +7,7 @@ import {
   type UsersResponse,
   type UserResponse,
   type UpdateUserRoleInput,
+  type CreateUserInput,
 } from '../schemas'
 
 const USERS_KEY = ['users']
@@ -64,6 +65,19 @@ export function useDeleteUser() {
   return useMutation({
     mutationFn: (id: string) =>
       api.delete(`/api/users/${id}`, undefined, messageResponseSchema),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: USERS_KEY })
+    },
+  })
+}
+
+export function useCreateUser() {
+  const api = useApi()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: CreateUserInput) =>
+      api.post<UserResponse>('/api/users', data, undefined, userResponseSchema),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: USERS_KEY })
     },

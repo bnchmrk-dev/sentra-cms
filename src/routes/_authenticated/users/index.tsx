@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Users as UsersIcon, Trash2, Loader2, ChevronRight } from "lucide-react";
+import { Users as UsersIcon, Trash2, Loader2, ChevronRight, UserPlus } from "lucide-react";
 import { useUsers, useCompanies, useDeleteUser } from "../../../hooks";
 import {
   Card,
@@ -86,6 +86,13 @@ function UsersPage() {
       <PageHeader
         title="Users"
         description="Manage all users and their access levels."
+        action={
+          <Link to="/users/new">
+            <Button variant="primary" leftIcon={<UserPlus className="w-4 h-4" />}>
+              Add User
+            </Button>
+          </Link>
+        }
       />
 
       {/* Filters */}

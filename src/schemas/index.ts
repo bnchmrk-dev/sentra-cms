@@ -152,6 +152,15 @@ export const updateUserRoleInputSchema = z.object({
 });
 export type UpdateUserRoleInput = z.infer<typeof updateUserRoleInputSchema>;
 
+export const createUserInputSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  firstName: z.string().min(1, "First name is required").max(50, "First name is too long").optional(),
+  lastName: z.string().min(1, "Last name is required").max(50, "Last name is too long").optional(),
+  role: userRoleSchema.default("user"),
+  companyId: z.string().min(1, "Company is required"),
+});
+export type CreateUserInput = z.infer<typeof createUserInputSchema>;
+
 export const checkDomainInputSchema = z.object({
   email: z.string().email("Invalid email address"),
 });
