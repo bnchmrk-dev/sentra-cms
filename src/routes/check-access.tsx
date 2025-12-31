@@ -1,54 +1,60 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Mail, ArrowRight, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
+import {
+  Mail,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+} from 'lucide-react'
 
-export const Route = createFileRoute("/check-access")({
+export const Route = createFileRoute('/check-access')({
   component: CheckAccessPage,
-});
+})
 
-const API_BASE_URL = import.meta.env.API_URL || "http://localhost:3001";
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 function CheckAccessPage() {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isValid, setIsValid] = useState(false);
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isValid, setIsValid] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/check-domain`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (data.allowed) {
-        setIsValid(true);
+        setIsValid(true)
         // Store email for signup page
-        sessionStorage.setItem("signupEmail", email);
+        sessionStorage.setItem('signupEmail', email)
         // Short delay to show success state
         setTimeout(() => {
-          navigate({ to: "/signup" });
-        }, 1000);
+          navigate({ to: '/signup' })
+        }, 1000)
       } else {
         setError(
           data.message ||
-            "This email domain is not authorized. Please contact us to get access."
-        );
+            'This email domain is not authorized. Please contact us to get access.',
+        )
       }
     } catch {
-      setError("Unable to verify access. Please try again.");
+      setError('Unable to verify access. Please try again.')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center p-6">
@@ -167,7 +173,7 @@ function CheckAccessPage() {
 
           <div className="mt-6 pt-6 border-t border-border-subtle text-center">
             <p className="text-sm text-text-muted">
-              Already have an account?{" "}
+              Already have an account?{' '}
               <a href="/login" className="text-accent hover:underline">
                 Sign in
               </a>
@@ -181,6 +187,5 @@ function CheckAccessPage() {
         </p>
       </div>
     </div>
-  );
+  )
 }
-

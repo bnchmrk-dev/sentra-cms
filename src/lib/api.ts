@@ -1,26 +1,30 @@
-import { useAuth } from "@clerk/clerk-react";
-import { useMemo } from "react";
-import { z } from "zod";
-import { apiErrorSchema } from "../schemas";
+import { useAuth } from '@clerk/clerk-react'
+import { useMemo } from 'react'
+import { z } from 'zod'
+import { apiErrorSchema } from '../schemas'
 
-const API_BASE_URL = import.meta.env.API_URL || "http://localhost:3001";
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
-type FetchOptions = Omit<RequestInit, "body"> & {
-  body?: unknown;
-};
+type FetchOptions = Omit<RequestInit, 'body'> & {
+  body?: unknown
+}
 
 /**
  * Custom API error class with structured error data
  */
 export class ApiError extends Error {
-  code?: string;
-  details?: Array<{ field: string; message: string }>;
+  code?: string
+  details?: Array<{ field: string; message: string }>
 
-  constructor(message: string, code?: string, details?: Array<{ field: string; message: string }>) {
-    super(message);
-    this.name = "ApiError";
-    this.code = code;
-    this.details = details;
+  constructor(
+    message: string,
+    code?: string,
+    details?: Array<{ field: string; message: string }>,
+  ) {
+    super(message)
+    this.name = 'ApiError'
+    this.code = code
+    this.details = details
   }
 }
 
@@ -31,52 +35,58 @@ function createApiClient(getToken: () => Promise<string | null>) {
   async function request<T>(
     endpoint: string,
     options: FetchOptions = {},
-    schema?: z.ZodType<T>
+    schema?: z.ZodType<T>,
   ): Promise<T> {
-    const { body, headers: customHeaders, ...rest } = options;
+    const { body, headers: customHeaders, ...rest } = options
 
-    const token = await getToken();
+    const token = await getToken()
 
     const headers: HeadersInit = {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...customHeaders,
-    };
+    }
 
     if (token) {
-      (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+      ;(headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
     }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...rest,
       headers,
       body: body ? JSON.stringify(body) : undefined,
-    });
+    })
 
-    const data = await response.json().catch(() => ({ error: "Failed to parse response" }));
+    const data = await response
+      .json()
+      .catch(() => ({ error: 'Failed to parse response' }))
 
     if (!response.ok) {
       // Try to parse as API error
-      const parsed = apiErrorSchema.safeParse(data);
+      const parsed = apiErrorSchema.safeParse(data)
       if (parsed.success) {
-        throw new ApiError(parsed.data.error, parsed.data.code, parsed.data.details);
+        throw new ApiError(
+          parsed.data.error,
+          parsed.data.code,
+          parsed.data.details,
+        )
       }
-      throw new ApiError(data.error || `API Error: ${response.status}`);
+      throw new ApiError(data.error || `API Error: ${response.status}`)
     }
 
     // Validate response with Zod schema if provided
     if (schema) {
-      const result = schema.safeParse(data);
+      const result = schema.safeParse(data)
       if (!result.success) {
-        console.error("API Response validation failed:", result.error.issues);
+        console.error('API Response validation failed:', result.error.issues)
         // In development, you might want to throw; in production, just log
         if (import.meta.env.DEV) {
-          console.warn("Response data:", data);
+          console.warn('Response data:', data)
         }
       }
-      return result.success ? result.data : data;
+      return result.success ? result.data : data
     }
 
-    return data as T;
+    return data as T
   }
 
   /**
@@ -86,46 +96,52 @@ function createApiClient(getToken: () => Promise<string | null>) {
   async function uploadFile<T>(
     endpoint: string,
     file: File,
-    schema?: z.ZodType<T>
+    schema?: z.ZodType<T>,
   ): Promise<T> {
-    const token = await getToken();
+    const token = await getToken()
 
     const headers: HeadersInit = {
-      "Content-Type": file.type || "application/octet-stream",
-    };
+      'Content-Type': file.type || 'application/octet-stream',
+    }
 
     if (token) {
-      (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+      ;(headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
     }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: "POST",
+      method: 'POST',
       headers,
       body: file,
-    });
+    })
 
-    const data = await response.json().catch(() => ({ error: "Failed to parse response" }));
+    const data = await response
+      .json()
+      .catch(() => ({ error: 'Failed to parse response' }))
 
     if (!response.ok) {
-      const parsed = apiErrorSchema.safeParse(data);
+      const parsed = apiErrorSchema.safeParse(data)
       if (parsed.success) {
-        throw new ApiError(parsed.data.error, parsed.data.code, parsed.data.details);
+        throw new ApiError(
+          parsed.data.error,
+          parsed.data.code,
+          parsed.data.details,
+        )
       }
-      throw new ApiError(data.error || `API Error: ${response.status}`);
+      throw new ApiError(data.error || `API Error: ${response.status}`)
     }
 
     if (schema) {
-      const result = schema.safeParse(data);
+      const result = schema.safeParse(data)
       if (!result.success) {
-        console.error("API Response validation failed:", result.error.issues);
+        console.error('API Response validation failed:', result.error.issues)
         if (import.meta.env.DEV) {
-          console.warn("Response data:", data);
+          console.warn('Response data:', data)
         }
       }
-      return result.success ? result.data : data;
+      return result.success ? result.data : data
     }
 
-    return data as T;
+    return data as T
   }
 
   /**
@@ -134,67 +150,88 @@ function createApiClient(getToken: () => Promise<string | null>) {
   async function putFile<T>(
     endpoint: string,
     file: File,
-    schema?: z.ZodType<T>
+    schema?: z.ZodType<T>,
   ): Promise<T> {
-    const token = await getToken();
+    const token = await getToken()
 
     const headers: HeadersInit = {
-      "Content-Type": file.type || "application/octet-stream",
-    };
+      'Content-Type': file.type || 'application/octet-stream',
+    }
 
     if (token) {
-      (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+      ;(headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
     }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: "PUT",
+      method: 'PUT',
       headers,
       body: file,
-    });
+    })
 
-    const data = await response.json().catch(() => ({ error: "Failed to parse response" }));
+    const data = await response
+      .json()
+      .catch(() => ({ error: 'Failed to parse response' }))
 
     if (!response.ok) {
-      const parsed = apiErrorSchema.safeParse(data);
+      const parsed = apiErrorSchema.safeParse(data)
       if (parsed.success) {
-        throw new ApiError(parsed.data.error, parsed.data.code, parsed.data.details);
+        throw new ApiError(
+          parsed.data.error,
+          parsed.data.code,
+          parsed.data.details,
+        )
       }
-      throw new ApiError(data.error || `API Error: ${response.status}`);
+      throw new ApiError(data.error || `API Error: ${response.status}`)
     }
 
     if (schema) {
-      const result = schema.safeParse(data);
+      const result = schema.safeParse(data)
       if (!result.success) {
-        console.error("API Response validation failed:", result.error.issues);
+        console.error('API Response validation failed:', result.error.issues)
         if (import.meta.env.DEV) {
-          console.warn("Response data:", data);
+          console.warn('Response data:', data)
         }
       }
-      return result.success ? result.data : data;
+      return result.success ? result.data : data
     }
 
-    return data as T;
+    return data as T
   }
 
   return {
     get: <T>(endpoint: string, options?: FetchOptions, schema?: z.ZodType<T>) =>
-      request<T>(endpoint, { ...options, method: "GET" }, schema),
+      request<T>(endpoint, { ...options, method: 'GET' }, schema),
 
-    post: <T>(endpoint: string, body?: unknown, options?: FetchOptions, schema?: z.ZodType<T>) =>
-      request<T>(endpoint, { ...options, method: "POST", body }, schema),
+    post: <T>(
+      endpoint: string,
+      body?: unknown,
+      options?: FetchOptions,
+      schema?: z.ZodType<T>,
+    ) => request<T>(endpoint, { ...options, method: 'POST', body }, schema),
 
-    put: <T>(endpoint: string, body?: unknown, options?: FetchOptions, schema?: z.ZodType<T>) =>
-      request<T>(endpoint, { ...options, method: "PUT", body }, schema),
+    put: <T>(
+      endpoint: string,
+      body?: unknown,
+      options?: FetchOptions,
+      schema?: z.ZodType<T>,
+    ) => request<T>(endpoint, { ...options, method: 'PUT', body }, schema),
 
-    patch: <T>(endpoint: string, body?: unknown, options?: FetchOptions, schema?: z.ZodType<T>) =>
-      request<T>(endpoint, { ...options, method: "PATCH", body }, schema),
+    patch: <T>(
+      endpoint: string,
+      body?: unknown,
+      options?: FetchOptions,
+      schema?: z.ZodType<T>,
+    ) => request<T>(endpoint, { ...options, method: 'PATCH', body }, schema),
 
-    delete: <T>(endpoint: string, options?: FetchOptions, schema?: z.ZodType<T>) =>
-      request<T>(endpoint, { ...options, method: "DELETE" }, schema),
+    delete: <T>(
+      endpoint: string,
+      options?: FetchOptions,
+      schema?: z.ZodType<T>,
+    ) => request<T>(endpoint, { ...options, method: 'DELETE' }, schema),
 
     uploadFile,
     putFile,
-  };
+  }
 }
 
 /**
@@ -211,15 +248,12 @@ function createApiClient(getToken: () => Promise<string | null>) {
  * });
  */
 export function useApi() {
-  const { getToken } = useAuth();
+  const { getToken } = useAuth()
 
-  const api = useMemo(
-    () => createApiClient(() => getToken()),
-    [getToken]
-  );
+  const api = useMemo(() => createApiClient(() => getToken()), [getToken])
 
-  return api;
+  return api
 }
 
 // Export type for the API client
-export type ApiClient = ReturnType<typeof createApiClient>;
+export type ApiClient = ReturnType<typeof createApiClient>
