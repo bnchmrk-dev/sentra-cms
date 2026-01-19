@@ -17,12 +17,12 @@ function LoginPage() {
   }, [isLoaded, isSignedIn, navigate])
 
   return (
-    <div className="min-h-screen bg-bg-primary flex items-center justify-center mt-[-200px]">
+    <div className="min-h-screen bg-bg-primary flex items-center justify-center">
       <div className="w-full max-w-md">
         {/* Branding */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-2">
           <img
-            src="/Primary Logo Transparent Background.png"
+            src="/Primary Logo Transparent Background thin.png"
             alt="Sentra"
             className="w-full mx-auto"
           />

@@ -47,13 +47,13 @@ export function Sidebar() {
       `}
     >
       {/* Header */}
-      <div className="px-4 flex items-start justify-between border-b border-border-subtle">
+      <div className="px-4 pt-4 flex items-start justify-between border-b border-border-subtle">
         {!collapsed && (
           <Link to="/" className="flex items-center">
             <img
-              src="/Primary Logo Transparent Background.png"
+              src="/Primary Logo Transparent Background thin.png"
               alt="Sentra"
-              className="w-full mx-auto"
+              className="w-full mx-auto pb-2"
             />
           </Link>
         )}

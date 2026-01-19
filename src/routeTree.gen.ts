@@ -24,6 +24,7 @@ import { Route as DemoApiTqTodosRouteImport } from './routes/demo/api.tq-todos'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
 import { Route as AuthenticatedVideosNewRouteImport } from './routes/_authenticated/videos/new'
 import { Route as AuthenticatedVideosVideoIdRouteImport } from './routes/_authenticated/videos/$videoId'
+import { Route as AuthenticatedUsersNewRouteImport } from './routes/_authenticated/users/new'
 import { Route as AuthenticatedUsersUserIdRouteImport } from './routes/_authenticated/users/$userId'
 import { Route as AuthenticatedCompaniesNewRouteImport } from './routes/_authenticated/companies/new'
 import { Route as AuthenticatedCompaniesCompanyIdRouteImport } from './routes/_authenticated/companies/$companyId'
@@ -109,6 +110,11 @@ const AuthenticatedVideosVideoIdRoute =
     path: '/videos/$videoId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedUsersNewRoute = AuthenticatedUsersNewRouteImport.update({
+  id: '/users/new',
+  path: '/users/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedUsersUserIdRoute =
   AuthenticatedUsersUserIdRouteImport.update({
     id: '/users/$userId',
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/companies/new': typeof AuthenticatedCompaniesNewRoute
   '/users/$userId': typeof AuthenticatedUsersUserIdRoute
+  '/users/new': typeof AuthenticatedUsersNewRoute
   '/videos/$videoId': typeof AuthenticatedVideosVideoIdRoute
   '/videos/new': typeof AuthenticatedVideosNewRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/companies/new': typeof AuthenticatedCompaniesNewRoute
   '/users/$userId': typeof AuthenticatedUsersUserIdRoute
+  '/users/new': typeof AuthenticatedUsersNewRoute
   '/videos/$videoId': typeof AuthenticatedVideosVideoIdRoute
   '/videos/new': typeof AuthenticatedVideosNewRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/_authenticated/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/_authenticated/companies/new': typeof AuthenticatedCompaniesNewRoute
   '/_authenticated/users/$userId': typeof AuthenticatedUsersUserIdRoute
+  '/_authenticated/users/new': typeof AuthenticatedUsersNewRoute
   '/_authenticated/videos/$videoId': typeof AuthenticatedVideosVideoIdRoute
   '/_authenticated/videos/new': typeof AuthenticatedVideosNewRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/companies/$companyId'
     | '/companies/new'
     | '/users/$userId'
+    | '/users/new'
     | '/videos/$videoId'
     | '/videos/new'
     | '/demo/api/names'
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/companies/$companyId'
     | '/companies/new'
     | '/users/$userId'
+    | '/users/new'
     | '/videos/$videoId'
     | '/videos/new'
     | '/demo/api/names'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/_authenticated/companies/$companyId'
     | '/_authenticated/companies/new'
     | '/_authenticated/users/$userId'
+    | '/_authenticated/users/new'
     | '/_authenticated/videos/$videoId'
     | '/_authenticated/videos/new'
     | '/demo/api/names'
@@ -415,6 +427,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVideosVideoIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/users/new': {
+      id: '/_authenticated/users/new'
+      path: '/users/new'
+      fullPath: '/users/new'
+      preLoaderRoute: typeof AuthenticatedUsersNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/users/$userId': {
       id: '/_authenticated/users/$userId'
       path: '/users/$userId'
@@ -472,6 +491,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCompaniesCompanyIdRoute: typeof AuthenticatedCompaniesCompanyIdRoute
   AuthenticatedCompaniesNewRoute: typeof AuthenticatedCompaniesNewRoute
   AuthenticatedUsersUserIdRoute: typeof AuthenticatedUsersUserIdRoute
+  AuthenticatedUsersNewRoute: typeof AuthenticatedUsersNewRoute
   AuthenticatedVideosVideoIdRoute: typeof AuthenticatedVideosVideoIdRoute
   AuthenticatedVideosNewRoute: typeof AuthenticatedVideosNewRoute
   AuthenticatedCompaniesIndexRoute: typeof AuthenticatedCompaniesIndexRoute
@@ -484,6 +504,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCompaniesCompanyIdRoute: AuthenticatedCompaniesCompanyIdRoute,
   AuthenticatedCompaniesNewRoute: AuthenticatedCompaniesNewRoute,
   AuthenticatedUsersUserIdRoute: AuthenticatedUsersUserIdRoute,
+  AuthenticatedUsersNewRoute: AuthenticatedUsersNewRoute,
   AuthenticatedVideosVideoIdRoute: AuthenticatedVideosVideoIdRoute,
   AuthenticatedVideosNewRoute: AuthenticatedVideosNewRoute,
   AuthenticatedCompaniesIndexRoute: AuthenticatedCompaniesIndexRoute,
