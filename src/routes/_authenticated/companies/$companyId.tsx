@@ -46,8 +46,10 @@ function CompanyDetailPage() {
 
   const [name, setName] = useState("");
   const [timezone, setTimezone] = useState("UTC");
+  const [maxUsers, setMaxUsers] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingTimezone, setIsEditingTimezone] = useState(false);
+  const [isEditingMaxUsers, setIsEditingMaxUsers] = useState(false);
   const [newDomain, setNewDomain] = useState("");
   const [removingDomain, setRemovingDomain] = useState<Domain | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -59,6 +61,9 @@ function CompanyDetailPage() {
   }
   if (company && !isEditingTimezone && timezone !== company.timezone) {
     setTimezone(company.timezone || "UTC");
+  }
+  if (company && !isEditingMaxUsers && maxUsers !== company.maxUsers) {
+    setMaxUsers(company.maxUsers ?? null);
   }
 
   if (isLoading) {
@@ -111,6 +116,20 @@ function CompanyDetailPage() {
     try {
       await updateCompany.mutateAsync({ id: companyId, data: { timezone } });
       setIsEditingTimezone(false);
+    } catch {
+      // Error handled by mutation
+    }
+  };
+
+  const handleSaveMaxUsers = async () => {
+    if (maxUsers === company.maxUsers) {
+      setIsEditingMaxUsers(false);
+      return;
+    }
+
+    try {
+      await updateCompany.mutateAsync({ id: companyId, data: { maxUsers } });
+      setIsEditingMaxUsers(false);
     } catch {
       // Error handled by mutation
     }
@@ -281,6 +300,68 @@ function CompanyDetailPage() {
             )}
           </div>
 
+          {/* Maximum Users */}
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              <Users className="w-4 h-4 inline mr-2" />
+              Maximum Users
+            </label>
+            <p className="text-xs text-text-muted mb-2">
+              Limit the number of users who can register. Leave empty for unlimited.
+            </p>
+            {isEditingMaxUsers ? (
+              <div className="space-y-3">
+                <Input
+                  type="number"
+                  min={1}
+                  value={maxUsers ?? ""}
+                  onChange={(e) =>
+                    setMaxUsers(e.target.value ? parseInt(e.target.value, 10) : null)
+                  }
+                  placeholder="Unlimited"
+                />
+                <div className="flex gap-3">
+                  <Button
+                    variant="primary"
+                    onClick={handleSaveMaxUsers}
+                    isLoading={updateCompany.isPending}
+                    leftIcon={<Save className="w-4 h-4" />}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setMaxUsers(company.maxUsers ?? null);
+                      setIsEditingMaxUsers(false);
+                    }}
+                    disabled={updateCompany.isPending}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-bg-elevated border border-border-subtle">
+                <span className="text-text-primary font-medium">
+                  {company.maxUsers ? (
+                    <>
+                      {company._count?.users || 0} / {company.maxUsers} users
+                      {(company._count?.users || 0) >= company.maxUsers && (
+                        <span className="ml-2 text-status-error text-sm">(Limit reached)</span>
+                      )}
+                    </>
+                  ) : (
+                    "Unlimited"
+                  )}
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => setIsEditingMaxUsers(true)}>
+                  Edit
+                </Button>
+              </div>
+            )}
+          </div>
+
           {updateCompany.error && (
             <Alert variant="error">{updateCompany.error.message}</Alert>
           )}
@@ -352,10 +433,12 @@ function CompanyDetailPage() {
                 <IconButton
                   variant="ghost"
                   size="sm"
-                  icon={<Trash2 className="w-4 h-4" />}
+                  label={`Remove ${domain.domain}`}
                   onClick={() => setRemovingDomain(domain)}
                   className="text-status-error hover:bg-status-error-bg"
-                />
+                >
+                  <Trash2 className="w-4 h-4" />
+                </IconButton>
               </div>
             ))}
           </div>
@@ -388,12 +471,16 @@ function CompanyDetailPage() {
       {/* Remove Domain Confirmation */}
       <ConfirmModal
         isOpen={!!removingDomain}
-        onClose={() => setRemovingDomain(null)}
+        onClose={() => {
+          setRemovingDomain(null);
+          removeDomain.reset();
+        }}
         onConfirm={handleRemoveDomain}
         title="Remove Domain"
         description={`Are you sure you want to remove "${removingDomain?.domain}"? Users with this email domain won't be able to sign up anymore.`}
         confirmText="Remove Domain"
         isLoading={removeDomain.isPending}
+        error={removeDomain.error?.message}
       />
 
       {/* Delete Company Confirmation */}

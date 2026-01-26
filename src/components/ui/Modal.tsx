@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Button } from "./Button";
+import { Alert } from "./Alert";
 
 interface ModalProps {
   isOpen: boolean;
@@ -102,6 +103,7 @@ interface ConfirmModalProps {
   confirmText?: string;
   confirmVariant?: "primary" | "danger";
   isLoading?: boolean;
+  error?: string | null;
 }
 
 export function ConfirmModal({
@@ -113,6 +115,7 @@ export function ConfirmModal({
   confirmText = "Confirm",
   confirmVariant = "danger",
   isLoading = false,
+  error,
 }: ConfirmModalProps) {
   return (
     <Modal
@@ -136,6 +139,11 @@ export function ConfirmModal({
       }
     >
       <p className="text-text-secondary">{description}</p>
+      {error && (
+        <Alert variant="error" className="mt-4">
+          {error}
+        </Alert>
+      )}
     </Modal>
   );
 }

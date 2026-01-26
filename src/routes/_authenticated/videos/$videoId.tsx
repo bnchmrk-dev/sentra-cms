@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
-import { ArrowLeft, Video, Save, Upload, FileVideo, X, Calendar, Play, Loader2, HelpCircle, Building2, Globe2 } from "lucide-react";
-import { useVideo, useUpdateVideo, useReplaceVideoFile, useDeleteVideo, useCompanies } from "../../../hooks";
-import { Card, Button, Input, Alert, Badge, ConfirmModal, Combobox } from "../../../components/ui";
+import { ArrowLeft, Video, Save, Upload, FileVideo, X, Calendar, Play, Loader2, HelpCircle, Building2, Globe2, Send, MessageSquare } from "lucide-react";
+import { useVideo, useUpdateVideo, useReplaceVideoFile, useDeleteVideo, useCompanies, useTeamsConversations, useSendTeamsMessage } from "../../../hooks";
+import { Card, Button, Input, Alert, Badge, ConfirmModal, Combobox, Modal } from "../../../components/ui";
 import { PageHeader } from "../../../components/layout";
 import { QuestionEditor } from "../../../components/QuestionEditor";
 
@@ -18,6 +18,10 @@ function VideoDetailPage() {
   const updateVideo = useUpdateVideo();
   const replaceFile = useReplaceVideoFile();
   const deleteVideo = useDeleteVideo();
+  
+  // Teams bot hooks
+  const { data: conversationsData, isLoading: conversationsLoading } = useTeamsConversations();
+  const sendTeamsMessage = useSendTeamsMessage();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
@@ -25,6 +29,9 @@ function VideoDetailPage() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showTeamsModal, setShowTeamsModal] = useState(false);
+  const [selectedTeamsUser, setSelectedTeamsUser] = useState<string | null>(null);
+  const [teamsSendSuccess, setTeamsSendSuccess] = useState(false);
   const [newFile, setNewFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -38,6 +45,37 @@ function VideoDetailPage() {
       label: company.name,
     }));
   }, [companiesData]);
+
+  // Build Teams user options for the combobox
+  const teamsUserOptions = useMemo(() => {
+    if (!conversationsData?.conversations) return [];
+    return conversationsData.conversations.map((conv) => ({
+      value: conv.teamsUserId,
+      label: conv.userName || conv.userEmail || conv.teamsUserId,
+    }));
+  }, [conversationsData]);
+
+  // Handle sending video to Teams user
+  const handleSendToTeams = async () => {
+    if (!selectedTeamsUser || !video) return;
+    
+    const message = `📹 **New Video: ${video.title}**\n\nA new training video has been shared with you. Watch it now!\n\n🔗 [Watch Video](${video.url})`;
+    
+    try {
+      await sendTeamsMessage.mutateAsync({
+        teamsUserId: selectedTeamsUser,
+        message,
+      });
+      setTeamsSendSuccess(true);
+      setTimeout(() => {
+        setShowTeamsModal(false);
+        setSelectedTeamsUser(null);
+        setTeamsSendSuccess(false);
+      }, 2000);
+    } catch {
+      // Error handled by mutation
+    }
+  };
 
   // Initialize form when data loads
   useEffect(() => {
@@ -191,6 +229,15 @@ function VideoDetailPage() {
         description="Update video details and replace the file if needed."
         action={
           <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<Send className="w-4 h-4" />}
+              onClick={() => setShowTeamsModal(true)}
+              disabled={teamsUserOptions.length === 0}
+            >
+              Send to Teams
+            </Button>
             {isPublished(video.publishDate) ? (
               <Badge variant="success">Published</Badge>
             ) : (
@@ -457,6 +504,77 @@ function VideoDetailPage() {
         confirmVariant="danger"
         isLoading={deleteVideo.isPending}
       />
+
+      {/* Send to Teams Modal */}
+      <Modal
+        isOpen={showTeamsModal}
+        onClose={() => {
+          setShowTeamsModal(false);
+          setSelectedTeamsUser(null);
+          setTeamsSendSuccess(false);
+        }}
+        title="Send Video to Teams"
+      >
+        <div className="space-y-4">
+          {teamsSendSuccess ? (
+            <Alert variant="success" title="Message Sent!">
+              The video has been sent to the selected user.
+            </Alert>
+          ) : (
+            <>
+              <p className="text-sm text-text-secondary">
+                Select a Teams user to send this video to. They will receive a message with a link to watch "{video.title}".
+              </p>
+
+              {conversationsLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-6 h-6 animate-spin text-accent" />
+                </div>
+              ) : teamsUserOptions.length === 0 ? (
+                <Alert variant="warning" title="No Teams Users">
+                  No users have installed the Sentra bot yet. Users need to add the bot in Teams before you can send them messages.
+                </Alert>
+              ) : (
+                <Combobox
+                  options={teamsUserOptions}
+                  value={selectedTeamsUser}
+                  onChange={(val) => setSelectedTeamsUser(val)}
+                  placeholder="Select a Teams user..."
+                  searchPlaceholder="Search users..."
+                  emptyMessage="No users found"
+                />
+              )}
+
+              {sendTeamsMessage.error && (
+                <Alert variant="error">
+                  {sendTeamsMessage.error.message}
+                </Alert>
+              )}
+
+              <div className="flex justify-end gap-2 pt-4 border-t border-border-subtle">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowTeamsModal(false);
+                    setSelectedTeamsUser(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleSendToTeams}
+                  disabled={!selectedTeamsUser}
+                  isLoading={sendTeamsMessage.isPending}
+                  leftIcon={<MessageSquare className="w-4 h-4" />}
+                >
+                  Send Message
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

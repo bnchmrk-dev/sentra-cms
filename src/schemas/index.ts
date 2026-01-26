@@ -66,6 +66,7 @@ export const companyBaseSchema = z.object({
   id: z.string(),
   name: z.string(),
   timezone: z.string().default("UTC"), // IANA timezone identifier
+  maxUsers: z.number().int().positive().nullable().optional(), // Maximum users allowed (null = unlimited)
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -132,6 +133,7 @@ export type CreateCompanyInput = z.infer<typeof createCompanyInputSchema>;
 export const updateCompanyInputSchema = z.object({
   name: z.string().min(1, "Company name is required").max(100, "Company name is too long").optional(),
   timezone: z.string().optional(),
+  maxUsers: z.number().int().positive().nullable().optional(),
 });
 export type UpdateCompanyInput = z.infer<typeof updateCompanyInputSchema>;
 
