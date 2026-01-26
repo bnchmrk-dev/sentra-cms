@@ -1,197 +1,239 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useRef, useCallback, useMemo, useEffect } from "react";
-import { ArrowLeft, Video, Save, Upload, FileVideo, X, Calendar, Play, Loader2, HelpCircle, Building2, Globe2, Send, MessageSquare } from "lucide-react";
-import { useVideo, useUpdateVideo, useReplaceVideoFile, useDeleteVideo, useCompanies, useTeamsConversations, useSendTeamsMessage } from "../../../hooks";
-import { Card, Button, Input, Alert, Badge, ConfirmModal, Combobox, Modal } from "../../../components/ui";
-import { PageHeader } from "../../../components/layout";
-import { QuestionEditor } from "../../../components/QuestionEditor";
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
+import {
+  ArrowLeft,
+  Video,
+  Save,
+  Upload,
+  FileVideo,
+  X,
+  Calendar,
+  Play,
+  Loader2,
+  HelpCircle,
+  Building2,
+  Globe2,
+  Send,
+  MessageSquare,
+} from 'lucide-react'
+import {
+  useVideo,
+  useUpdateVideo,
+  useReplaceVideoFile,
+  useDeleteVideo,
+  useCompanies,
+  useTeamsConversations,
+  useSendTeamsMessage,
+} from '../../../hooks'
+import {
+  Card,
+  Button,
+  Input,
+  Alert,
+  Badge,
+  ConfirmModal,
+  Combobox,
+  Modal,
+} from '../../../components/ui'
+import { PageHeader } from '../../../components/layout'
+import { QuestionEditor } from '../../../components/QuestionEditor'
 
-export const Route = createFileRoute("/_authenticated/videos/$videoId")({
+export const Route = createFileRoute('/_authenticated/videos/$videoId')({
   component: VideoDetailPage,
-});
+})
 
 function VideoDetailPage() {
-  const { videoId } = Route.useParams();
-  const navigate = useNavigate();
-  const { data, isLoading, error } = useVideo(videoId);
-  const { data: companiesData, isLoading: companiesLoading } = useCompanies();
-  const updateVideo = useUpdateVideo();
-  const replaceFile = useReplaceVideoFile();
-  const deleteVideo = useDeleteVideo();
-  
+  const { videoId } = Route.useParams()
+  const navigate = useNavigate()
+  const { data, isLoading, error } = useVideo(videoId)
+  const { data: companiesData, isLoading: companiesLoading } = useCompanies()
+  const updateVideo = useUpdateVideo()
+  const replaceFile = useReplaceVideoFile()
+  const deleteVideo = useDeleteVideo()
+
   // Teams bot hooks
-  const { data: conversationsData, isLoading: conversationsLoading } = useTeamsConversations();
-  const sendTeamsMessage = useSendTeamsMessage();
+  const { data: conversationsData, isLoading: conversationsLoading } =
+    useTeamsConversations()
+  const sendTeamsMessage = useSendTeamsMessage()
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [title, setTitle] = useState("");
-  const [publishDate, setPublishDate] = useState("");
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showTeamsModal, setShowTeamsModal] = useState(false);
-  const [selectedTeamsUser, setSelectedTeamsUser] = useState<string | null>(null);
-  const [teamsSendSuccess, setTeamsSendSuccess] = useState(false);
-  const [newFile, setNewFile] = useState<File | null>(null);
-  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [title, setTitle] = useState('')
+  const [publishDate, setPublishDate] = useState('')
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+    null,
+  )
+  const [isInitialized, setIsInitialized] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showTeamsModal, setShowTeamsModal] = useState(false)
+  const [selectedTeamsUser, setSelectedTeamsUser] = useState<string | null>(
+    null,
+  )
+  const [teamsSendSuccess, setTeamsSendSuccess] = useState(false)
+  const [newFile, setNewFile] = useState<File | null>(null)
+  const [dragActive, setDragActive] = useState(false)
 
-  const video = data?.video;
+  const video = data?.video
 
   // Build company options for the combobox
   const companyOptions = useMemo(() => {
-    if (!companiesData?.companies) return [];
+    if (!companiesData?.companies) return []
     return companiesData.companies.map((company) => ({
       value: company.id,
       label: company.name,
-    }));
-  }, [companiesData]);
+    }))
+  }, [companiesData])
 
   // Build Teams user options for the combobox
   const teamsUserOptions = useMemo(() => {
-    if (!conversationsData?.conversations) return [];
+    if (!conversationsData?.conversations) return []
     return conversationsData.conversations.map((conv) => ({
       value: conv.teamsUserId,
       label: conv.userName || conv.userEmail || conv.teamsUserId,
-    }));
-  }, [conversationsData]);
+    }))
+  }, [conversationsData])
 
   // Handle sending video to Teams user
   const handleSendToTeams = async () => {
-    if (!selectedTeamsUser || !video) return;
-    
-    const message = `📹 **New Video: ${video.title}**\n\nA new training video has been shared with you. Watch it now!\n\n🔗 [Watch Video](${video.url})`;
-    
+    if (!selectedTeamsUser || !video) return
+
+    const message = `📹 **New Video: ${video.title}**\n\nA new training video has been shared with you. Watch it now!\n\n🔗 [Watch Video](${video.url})`
+
     try {
       await sendTeamsMessage.mutateAsync({
         teamsUserId: selectedTeamsUser,
         message,
-      });
-      setTeamsSendSuccess(true);
+      })
+      setTeamsSendSuccess(true)
       setTimeout(() => {
-        setShowTeamsModal(false);
-        setSelectedTeamsUser(null);
-        setTeamsSendSuccess(false);
-      }, 2000);
+        setShowTeamsModal(false)
+        setSelectedTeamsUser(null)
+        setTeamsSendSuccess(false)
+      }, 2000)
     } catch {
       // Error handled by mutation
     }
-  };
+  }
 
   // Initialize form when data loads
   useEffect(() => {
     if (video && !isInitialized) {
-      setTitle(video.title);
-      setPublishDate(new Date(video.publishDate).toISOString().slice(0, 16));
-      setSelectedCompanyId(video.companyId);
-      setIsInitialized(true);
+      setTitle(video.title)
+      setPublishDate(new Date(video.publishDate).toISOString().slice(0, 16))
+      setSelectedCompanyId(video.companyId)
+      setIsInitialized(true)
     }
-  }, [video, isInitialized]);
+  }, [video, isInitialized])
 
   const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
     }
-  }, []);
+  }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
 
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("video/")) {
-      setNewFile(file);
+    const file = e.dataTransfer.files?.[0]
+    if (file && file.type.startsWith('video/')) {
+      setNewFile(file)
     }
-  }, []);
+  }, [])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      setNewFile(file);
+      setNewFile(file)
     }
-  };
+  }
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  }
 
   const isPublished = (publishDate: string) => {
-    return new Date(publishDate) <= new Date();
-  };
+    return new Date(publishDate) <= new Date()
+  }
 
-  const hasChanges = video && (
-    title !== video.title ||
-    new Date(publishDate).toISOString() !== new Date(video.publishDate).toISOString() ||
-    selectedCompanyId !== video.companyId ||
-    newFile !== null
-  );
+  const hasChanges =
+    video &&
+    (title !== video.title ||
+      new Date(publishDate).toISOString() !==
+        new Date(video.publishDate).toISOString() ||
+      selectedCompanyId !== video.companyId ||
+      newFile !== null)
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!video) return;
+    e.preventDefault()
+    if (!video) return
 
     try {
       // If there's a new file, upload it first
       if (newFile) {
-        await replaceFile.mutateAsync({ id: video.id, file: newFile });
-        setNewFile(null);
+        await replaceFile.mutateAsync({ id: video.id, file: newFile })
+        setNewFile(null)
       }
 
       // Update metadata if changed
-      const titleChanged = title !== video.title;
-      const dateChanged = new Date(publishDate).toISOString() !== new Date(video.publishDate).toISOString();
-      const companyChanged = selectedCompanyId !== video.companyId;
-      
+      const titleChanged = title !== video.title
+      const dateChanged =
+        new Date(publishDate).toISOString() !==
+        new Date(video.publishDate).toISOString()
+      const companyChanged = selectedCompanyId !== video.companyId
+
       if (titleChanged || dateChanged || companyChanged) {
         await updateVideo.mutateAsync({
           id: video.id,
           data: {
             title: titleChanged ? title : undefined,
-            publishDate: dateChanged ? new Date(publishDate).toISOString() : undefined,
+            publishDate: dateChanged
+              ? new Date(publishDate).toISOString()
+              : undefined,
             companyId: companyChanged ? selectedCompanyId : undefined,
           },
-        });
+        })
       }
     } catch {
       // Error handled by mutation
     }
-  };
+  }
 
   const handleDelete = async () => {
-    if (!video) return;
+    if (!video) return
     try {
-      await deleteVideo.mutateAsync(video.id);
-      navigate({ to: "/videos" });
+      await deleteVideo.mutateAsync(video.id)
+      navigate({ to: '/videos' })
     } catch {
       // Error handled by mutation
     }
-  };
+  }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -199,7 +241,7 @@ function VideoDetailPage() {
       <Alert variant="error" title="Error loading video">
         {error.message}
       </Alert>
-    );
+    )
   }
 
   if (!video) {
@@ -207,10 +249,10 @@ function VideoDetailPage() {
       <Alert variant="error" title="Video not found">
         The requested video could not be found.
       </Alert>
-    );
+    )
   }
 
-  const isSaving = updateVideo.isPending || replaceFile.isPending;
+  const isSaving = updateVideo.isPending || replaceFile.isPending
 
   return (
     <div className="animate-fade-in max-w-4xl">
@@ -227,7 +269,7 @@ function VideoDetailPage() {
       <PageHeader
         title="Edit Video"
         description="Update video details and replace the file if needed."
-        action={
+        actions={
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"
@@ -324,7 +366,7 @@ function VideoDetailPage() {
                 <Building2 className="w-4 h-4 inline mr-2" />
                 Video Visibility
               </label>
-              
+
               {/* Quick toggle for everyone vs specific org */}
               <div className="flex gap-2 mb-3">
                 <button
@@ -333,9 +375,10 @@ function VideoDetailPage() {
                   className={`
                     flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg
                     border transition-all text-sm font-medium
-                    ${selectedCompanyId === null
-                      ? "bg-accent-subtle border-accent text-accent"
-                      : "bg-bg-elevated border-border-default text-text-secondary hover:border-accent hover:text-text-primary"
+                    ${
+                      selectedCompanyId === null
+                        ? 'bg-accent-subtle border-accent text-accent'
+                        : 'bg-bg-elevated border-border-default text-text-secondary hover:border-accent hover:text-text-primary'
                     }
                   `}
                 >
@@ -344,16 +387,21 @@ function VideoDetailPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSelectedCompanyId(video?.companyId || companyOptions[0]?.value || null)}
+                  onClick={() =>
+                    setSelectedCompanyId(
+                      video?.companyId || companyOptions[0]?.value || null,
+                    )
+                  }
                   disabled={companyOptions.length === 0}
                   className={`
                     flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg
                     border transition-all text-sm font-medium
-                    ${selectedCompanyId !== null
-                      ? "bg-accent-subtle border-accent text-accent"
-                      : "bg-bg-elevated border-border-default text-text-secondary hover:border-accent hover:text-text-primary"
+                    ${
+                      selectedCompanyId !== null
+                        ? 'bg-accent-subtle border-accent text-accent'
+                        : 'bg-bg-elevated border-border-default text-text-secondary hover:border-accent hover:text-text-primary'
                     }
-                    ${companyOptions.length === 0 ? "opacity-50 cursor-not-allowed" : ""}
+                    ${companyOptions.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
                 >
                   <Building2 className="w-4 h-4" />
@@ -377,8 +425,8 @@ function VideoDetailPage() {
 
               <p className="text-xs text-text-muted mt-2">
                 {selectedCompanyId === null
-                  ? "This video is visible to all users."
-                  : "Only users from the selected organization can view this video."}
+                  ? 'This video is visible to all users.'
+                  : 'Only users from the selected organization can view this video.'}
               </p>
             </div>
 
@@ -391,11 +439,12 @@ function VideoDetailPage() {
                 className={`
                   relative border-2 border-dashed rounded-xl p-6 text-center
                   transition-colors cursor-pointer
-                  ${dragActive
-                    ? "border-accent bg-accent-subtle"
-                    : newFile
-                      ? "border-status-live bg-status-live-bg"
-                      : "border-border-default hover:border-accent hover:bg-bg-hover"
+                  ${
+                    dragActive
+                      ? 'border-accent bg-accent-subtle'
+                      : newFile
+                        ? 'border-status-live bg-status-live-bg'
+                        : 'border-border-default hover:border-accent hover:bg-bg-hover'
                   }
                 `}
                 onDragEnter={handleDrag}
@@ -426,8 +475,8 @@ function VideoDetailPage() {
                     <button
                       type="button"
                       onClick={(e) => {
-                        e.stopPropagation();
-                        setNewFile(null);
+                        e.stopPropagation()
+                        setNewFile(null)
                       }}
                       className="p-1 rounded hover:bg-bg-hover text-text-muted hover:text-text-primary transition-colors"
                     >
@@ -485,7 +534,8 @@ function VideoDetailPage() {
               Quiz Questions
             </h2>
             <p className="text-sm text-text-muted">
-              Add multiple choice questions for viewers to answer after watching.
+              Add multiple choice questions for viewers to answer after
+              watching.
             </p>
           </div>
         </div>
@@ -509,9 +559,9 @@ function VideoDetailPage() {
       <Modal
         isOpen={showTeamsModal}
         onClose={() => {
-          setShowTeamsModal(false);
-          setSelectedTeamsUser(null);
-          setTeamsSendSuccess(false);
+          setShowTeamsModal(false)
+          setSelectedTeamsUser(null)
+          setTeamsSendSuccess(false)
         }}
         title="Send Video to Teams"
       >
@@ -523,7 +573,8 @@ function VideoDetailPage() {
           ) : (
             <>
               <p className="text-sm text-text-secondary">
-                Select a Teams user to send this video to. They will receive a message with a link to watch "{video.title}".
+                Select a Teams user to send this video to. They will receive a
+                message with a link to watch "{video.title}".
               </p>
 
               {conversationsLoading ? (
@@ -532,7 +583,8 @@ function VideoDetailPage() {
                 </div>
               ) : teamsUserOptions.length === 0 ? (
                 <Alert variant="warning" title="No Teams Users">
-                  No users have installed the Sentra bot yet. Users need to add the bot in Teams before you can send them messages.
+                  No users have installed the Sentra bot yet. Users need to add
+                  the bot in Teams before you can send them messages.
                 </Alert>
               ) : (
                 <Combobox
@@ -546,17 +598,15 @@ function VideoDetailPage() {
               )}
 
               {sendTeamsMessage.error && (
-                <Alert variant="error">
-                  {sendTeamsMessage.error.message}
-                </Alert>
+                <Alert variant="error">{sendTeamsMessage.error.message}</Alert>
               )}
 
               <div className="flex justify-end gap-2 pt-4 border-t border-border-subtle">
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    setShowTeamsModal(false);
-                    setSelectedTeamsUser(null);
+                    setShowTeamsModal(false)
+                    setSelectedTeamsUser(null)
                   }}
                 >
                   Cancel
@@ -576,7 +626,5 @@ function VideoDetailPage() {
         </div>
       </Modal>
     </div>
-  );
+  )
 }
-
-
