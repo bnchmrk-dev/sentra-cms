@@ -25,9 +25,17 @@ const sendMessageResponseSchema = z.object({
   error: z.string().optional(),
 });
 
+const sendVideoResponseSchema = z.object({
+  success: z.boolean(),
+  teamsUserId: z.string().optional(),
+  videoId: z.string().optional(),
+  error: z.string().optional(),
+});
+
 export type TeamsConversation = z.infer<typeof teamsConversationSchema>;
 export type ConversationsResponse = z.infer<typeof conversationsResponseSchema>;
 export type SendMessageResponse = z.infer<typeof sendMessageResponseSchema>;
+export type SendVideoResponse = z.infer<typeof sendVideoResponseSchema>;
 
 const BOT_KEY = ["bot"];
 
@@ -66,6 +74,28 @@ export function useSendTeamsMessage() {
         { teamsUserId, message },
         undefined,
         sendMessageResponseSchema
+      ),
+  });
+}
+
+interface SendVideoParams {
+  teamsUserId: string;
+  videoId: string;
+}
+
+/**
+ * Send a video as an Adaptive Card to a Teams user
+ */
+export function useSendTeamsVideo() {
+  const api = useApi();
+
+  return useMutation({
+    mutationFn: ({ teamsUserId, videoId }: SendVideoParams) =>
+      api.post<SendVideoResponse>(
+        "/api/bot/send-video",
+        { teamsUserId, videoId },
+        undefined,
+        sendVideoResponseSchema
       ),
   });
 }

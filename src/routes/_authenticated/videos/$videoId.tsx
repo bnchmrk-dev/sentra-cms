@@ -23,7 +23,7 @@ import {
   useDeleteVideo,
   useCompanies,
   useTeamsConversations,
-  useSendTeamsMessage,
+  useSendTeamsVideo,
 } from '../../../hooks'
 import {
   Card,
@@ -54,7 +54,7 @@ function VideoDetailPage() {
   // Teams bot hooks
   const { data: conversationsData, isLoading: conversationsLoading } =
     useTeamsConversations()
-  const sendTeamsMessage = useSendTeamsMessage()
+  const sendTeamsVideo = useSendTeamsVideo()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [title, setTitle] = useState('')
@@ -96,12 +96,10 @@ function VideoDetailPage() {
   const handleSendToTeams = async () => {
     if (!selectedTeamsUser || !video) return
 
-    const message = `📹 **New Video: ${video.title}**\n\nA new training video has been shared with you. Watch it now!\n\n🔗 [Watch Video](${video.url})`
-
     try {
-      await sendTeamsMessage.mutateAsync({
+      await sendTeamsVideo.mutateAsync({
         teamsUserId: selectedTeamsUser,
-        message,
+        videoId: video.id,
       })
       setTeamsSendSuccess(true)
       setTimeout(() => {
@@ -597,8 +595,8 @@ function VideoDetailPage() {
                 />
               )}
 
-              {sendTeamsMessage.error && (
-                <Alert variant="error">{sendTeamsMessage.error.message}</Alert>
+              {sendTeamsVideo.error && (
+                <Alert variant="error">{sendTeamsVideo.error.message}</Alert>
               )}
 
               <div className="flex justify-end gap-2 pt-4 border-t border-border-subtle">
@@ -615,10 +613,10 @@ function VideoDetailPage() {
                   variant="primary"
                   onClick={handleSendToTeams}
                   disabled={!selectedTeamsUser}
-                  isLoading={sendTeamsMessage.isPending}
+                  isLoading={sendTeamsVideo.isPending}
                   leftIcon={<MessageSquare className="w-4 h-4" />}
                 >
-                  Send Message
+                  Send Video
                 </Button>
               </div>
             </>
