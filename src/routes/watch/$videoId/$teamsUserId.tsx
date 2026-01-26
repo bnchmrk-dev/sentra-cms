@@ -61,6 +61,8 @@ function WatchVideoPage() {
 
     if (shouldUpdate || newProgress >= 75) {
       try {
+        console.log('[Watch] Sending progress update:', { teamsUserId, videoId, progress: newProgress })
+        
         const res = await fetch(`${API_URL}/api/progress/video`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -71,7 +73,14 @@ function WatchVideoPage() {
           }),
         })
 
+        if (!res.ok) {
+          const errorText = await res.text()
+          console.error('[Watch] Progress API error:', res.status, errorText)
+          return
+        }
+
         const data = await res.json()
+        console.log('[Watch] Progress response:', data)
 
         if (data.progress?.completed) {
           setCompleted(true)
@@ -80,8 +89,12 @@ function WatchVideoPage() {
         if (data.quizTriggered) {
           setQuizSent(true)
         }
+        
+        if (data.quizError) {
+          console.error('[Watch] Quiz error from API:', data.quizError)
+        }
       } catch (err) {
-        console.error('Failed to update progress:', err)
+        console.error('[Watch] Failed to update progress:', err)
       }
     }
   }, [videoId, teamsUserId, progress, completed])
