@@ -3,7 +3,8 @@ import { useMemo } from 'react'
 import { z } from 'zod'
 import { apiErrorSchema } from '../schemas'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 type FetchOptions = Omit<RequestInit, 'body'> & {
   body?: unknown

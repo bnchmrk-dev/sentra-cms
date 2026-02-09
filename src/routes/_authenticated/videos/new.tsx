@@ -1,98 +1,118 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useRef, useCallback, useMemo } from "react";
-import { ArrowLeft, Video, Upload, X, FileVideo, Building2, Globe2 } from "lucide-react";
-import { useUploadVideo, useCompanies } from "../../../hooks";
-import { Card, Button, Input, Alert, Combobox } from "../../../components/ui";
-import { PageHeader } from "../../../components/layout";
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router'
+import { useState, useRef, useCallback, useMemo } from 'react'
+import {
+  ArrowLeft,
+  Video,
+  Upload,
+  X,
+  FileVideo,
+  Building2,
+  Globe2,
+} from 'lucide-react'
+import { useUploadVideo, useCompanies } from '../../../hooks'
+import { Card, Button, Input, Alert, Combobox } from '../../../components/ui'
+import { PageHeader } from '../../../components/layout'
 
-export const Route = createFileRoute("/_authenticated/videos/new")({
+export const Route = createFileRoute('/_authenticated/videos/new')({
   component: NewVideoPage,
-});
+})
 
 function NewVideoPage() {
-  const navigate = useNavigate();
-  const uploadVideo = useUploadVideo();
-  const { data: companiesData, isLoading: companiesLoading } = useCompanies();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate()
+  const uploadVideo = useUploadVideo()
+  const { data: companiesData, isLoading: companiesLoading } = useCompanies()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState('')
   const [publishDate, setPublishDate] = useState(
-    new Date().toISOString().slice(0, 16) // Default to now, format: YYYY-MM-DDTHH:mm
-  );
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [dragActive, setDragActive] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+    new Date().toISOString().slice(0, 16), // Default to now, format: YYYY-MM-DDTHH:mm
+  )
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [dragActive, setDragActive] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null)
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+    null,
+  )
 
   // Build company options for the combobox
   const companyOptions = useMemo(() => {
-    if (!companiesData?.companies) return [];
+    if (!companiesData?.companies) return []
     return companiesData.companies.map((company) => ({
       value: company.id,
       label: company.name,
-    }));
-  }, [companiesData]);
+    }))
+  }, [companiesData])
 
   const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
     }
-  }, []);
+  }, [])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setDragActive(false)
 
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("video/")) {
-      setSelectedFile(file);
-      if (!title) {
-        setTitle(file.name.replace(/\.[^/.]+$/, "")); // Use filename without extension as default title
+      const file = e.dataTransfer.files?.[0]
+      if (file && file.type.startsWith('video/')) {
+        setSelectedFile(file)
+        if (!title) {
+          setTitle(file.name.replace(/\.[^/.]+$/, '')) // Use filename without extension as default title
+        }
       }
-    }
-  }, [title]);
+    },
+    [title],
+  )
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      setSelectedFile(file);
+      setSelectedFile(file)
       if (!title) {
-        setTitle(file.name.replace(/\.[^/.]+$/, ""));
+        setTitle(file.name.replace(/\.[^/.]+$/, ''))
       }
     }
-  };
+  }
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedFile || !title.trim()) return;
+    e.preventDefault()
+    if (!selectedFile || !title.trim()) return
 
     try {
-      setUploadProgress("Uploading...");
+      setUploadProgress('Preparing upload...')
       const result = await uploadVideo.mutateAsync({
         file: selectedFile,
         title: title.trim(),
         publishDate: new Date(publishDate).toISOString(),
         companyId: selectedCompanyId,
-      });
-      navigate({ to: "/videos/$videoId", params: { videoId: result.video.id } });
+        onProgress: ({ percentage }) => {
+          if (percentage < 100) {
+            setUploadProgress(`Uploading... ${Math.round(percentage)}%`)
+          } else {
+            setUploadProgress('Saving video record...')
+          }
+        },
+      })
+      navigate({ to: '/videos/$videoId', params: { videoId: result.video.id } })
     } catch {
-      setUploadProgress(null);
+      setUploadProgress(null)
       // Error handled by mutation
     }
-  };
+  }
 
   return (
     <div className="animate-fade-in max-w-2xl">
@@ -136,11 +156,12 @@ function NewVideoPage() {
               className={`
                 relative border-2 border-dashed rounded-xl p-8 text-center
                 transition-colors cursor-pointer
-                ${dragActive
-                  ? "border-accent bg-accent-subtle"
-                  : selectedFile
-                    ? "border-status-live bg-status-live-bg"
-                    : "border-border-default hover:border-accent hover:bg-bg-hover"
+                ${
+                  dragActive
+                    ? 'border-accent bg-accent-subtle'
+                    : selectedFile
+                      ? 'border-status-live bg-status-live-bg'
+                      : 'border-border-default hover:border-accent hover:bg-bg-hover'
                 }
               `}
               onDragEnter={handleDrag}
@@ -173,8 +194,8 @@ function NewVideoPage() {
                   <button
                     type="button"
                     onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedFile(null);
+                      e.stopPropagation()
+                      setSelectedFile(null)
                     }}
                     className="p-2 rounded-lg hover:bg-bg-hover text-text-muted hover:text-text-primary transition-colors"
                   >
@@ -233,7 +254,7 @@ function NewVideoPage() {
               <Building2 className="w-4 h-4 inline mr-2" />
               Video Visibility
             </label>
-            
+
             {/* Quick toggle for everyone vs specific org */}
             <div className="flex gap-2 mb-3">
               <button
@@ -242,9 +263,10 @@ function NewVideoPage() {
                 className={`
                   flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
                   border transition-all text-sm font-medium
-                  ${selectedCompanyId === null
-                    ? "bg-accent-subtle border-accent text-accent"
-                    : "bg-bg-elevated border-border-default text-text-secondary hover:border-accent hover:text-text-primary"
+                  ${
+                    selectedCompanyId === null
+                      ? 'bg-accent-subtle border-accent text-accent'
+                      : 'bg-bg-elevated border-border-default text-text-secondary hover:border-accent hover:text-text-primary'
                   }
                 `}
               >
@@ -253,16 +275,19 @@ function NewVideoPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setSelectedCompanyId(companyOptions[0]?.value || null)}
+                onClick={() =>
+                  setSelectedCompanyId(companyOptions[0]?.value || null)
+                }
                 disabled={companyOptions.length === 0}
                 className={`
                   flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
                   border transition-all text-sm font-medium
-                  ${selectedCompanyId !== null
-                    ? "bg-accent-subtle border-accent text-accent"
-                    : "bg-bg-elevated border-border-default text-text-secondary hover:border-accent hover:text-text-primary"
+                  ${
+                    selectedCompanyId !== null
+                      ? 'bg-accent-subtle border-accent text-accent'
+                      : 'bg-bg-elevated border-border-default text-text-secondary hover:border-accent hover:text-text-primary'
                   }
-                  ${companyOptions.length === 0 ? "opacity-50 cursor-not-allowed" : ""}
+                  ${companyOptions.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}
                 `}
               >
                 <Building2 className="w-4 h-4" />
@@ -286,8 +311,8 @@ function NewVideoPage() {
 
             <p className="text-xs text-text-muted mt-2">
               {selectedCompanyId === null
-                ? "This video will be visible to all users."
-                : "Only users from the selected organization can view this video."}
+                ? 'This video will be visible to all users.'
+                : 'Only users from the selected organization can view this video.'}
             </p>
           </div>
 
@@ -295,9 +320,7 @@ function NewVideoPage() {
             <Alert variant="error">{uploadVideo.error.message}</Alert>
           )}
 
-          {uploadProgress && (
-            <Alert variant="info">{uploadProgress}</Alert>
-          )}
+          {uploadProgress && <Alert variant="info">{uploadProgress}</Alert>}
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-subtle">
             <Link to="/videos">
@@ -318,7 +341,5 @@ function NewVideoPage() {
         </form>
       </Card>
     </div>
-  );
+  )
 }
-
-
