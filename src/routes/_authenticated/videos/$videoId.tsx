@@ -15,6 +15,8 @@ import {
   Globe2,
   Send,
   MessageSquare,
+  Tag,
+  Captions,
 } from 'lucide-react'
 import {
   useVideo,
@@ -37,6 +39,8 @@ import {
 } from '../../../components/ui'
 import { PageHeader } from '../../../components/layout'
 import { QuestionEditor } from '../../../components/QuestionEditor'
+import { MetadataEditor } from '../../../components/MetadataEditor'
+import { createVttBlobUrl } from '../../../lib/srt'
 
 export const Route = createFileRoute('/_authenticated/videos/$videoId')({
   component: VideoDetailPage,
@@ -69,6 +73,7 @@ function VideoDetailPage() {
     null,
   )
   const [teamsSendSuccess, setTeamsSendSuccess] = useState(false)
+  const [srt, setSrt] = useState('')
   const [newFile, setNewFile] = useState<File | null>(null)
   const [dragActive, setDragActive] = useState(false)
 
@@ -91,6 +96,18 @@ function VideoDetailPage() {
       label: conv.userName || conv.userEmail || conv.teamsUserId,
     }))
   }, [conversationsData])
+
+  const previewVttUrl = useMemo(() => {
+    const srtText = video?.srt
+    if (!srtText) return null
+    return createVttBlobUrl(srtText)
+  }, [video?.srt])
+
+  useEffect(() => {
+    return () => {
+      if (previewVttUrl) URL.revokeObjectURL(previewVttUrl)
+    }
+  }, [previewVttUrl])
 
   // Handle sending video to Teams user
   const handleSendToTeams = async () => {
@@ -118,6 +135,7 @@ function VideoDetailPage() {
       setTitle(video.title)
       setPublishDate(new Date(video.publishDate).toISOString().slice(0, 16))
       setSelectedCompanyId(video.companyId)
+      setSrt(video.srt || '')
       setIsInitialized(true)
     }
   }, [video, isInitialized])
@@ -179,6 +197,7 @@ function VideoDetailPage() {
       new Date(publishDate).toISOString() !==
         new Date(video.publishDate).toISOString() ||
       selectedCompanyId !== video.companyId ||
+      srt !== (video.srt || '') ||
       newFile !== null)
 
   const handleSave = async (e: React.FormEvent) => {
@@ -198,8 +217,9 @@ function VideoDetailPage() {
         new Date(publishDate).toISOString() !==
         new Date(video.publishDate).toISOString()
       const companyChanged = selectedCompanyId !== video.companyId
+      const srtChanged = srt !== (video.srt || '')
 
-      if (titleChanged || dateChanged || companyChanged) {
+      if (titleChanged || dateChanged || companyChanged || srtChanged) {
         await updateVideo.mutateAsync({
           id: video.id,
           data: {
@@ -208,6 +228,7 @@ function VideoDetailPage() {
               ? new Date(publishDate).toISOString()
               : undefined,
             companyId: companyChanged ? selectedCompanyId : undefined,
+            srt: srtChanged ? (srt || null) : undefined,
           },
         })
       }
@@ -299,7 +320,17 @@ function VideoDetailPage() {
               controls
               className="w-full h-full object-contain"
               poster=""
+              crossOrigin="anonymous"
             >
+              {previewVttUrl && (
+                <track
+                  kind="captions"
+                  src={previewVttUrl}
+                  srcLang="en"
+                  label="English"
+                  default
+                />
+              )}
               Your browser does not support the video tag.
             </video>
           </div>
@@ -428,6 +459,30 @@ function VideoDetailPage() {
               </p>
             </div>
 
+            {/* SRT Subtitles */}
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                <Captions className="w-4 h-4 inline mr-2" />
+                Subtitles (SRT)
+              </label>
+              <textarea
+                value={srt}
+                onChange={(e) => setSrt(e.target.value)}
+                placeholder={`Paste SRT content here...\n\n1\n00:00:01,000 --> 00:00:04,000\nHello, welcome to this video.\n\n2\n00:00:05,000 --> 00:00:08,000\nLet's get started.`}
+                rows={6}
+                className="
+                  w-full px-4 py-2.5 rounded-lg
+                  bg-bg-elevated border border-border-default
+                  text-text-primary placeholder:text-text-muted
+                  focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent
+                  transition-all font-mono text-sm resize-y
+                "
+              />
+              <p className="text-xs text-text-muted mt-1">
+                Paste raw SRT subtitle text. Captions will display on the video in Teams and the CMS preview.
+              </p>
+            </div>
+
             {/* Replace File */}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
@@ -539,6 +594,26 @@ function VideoDetailPage() {
         </div>
 
         <QuestionEditor videoId={videoId} />
+      </Card>
+
+      {/* Metadata Section */}
+      <Card variant="default" padding="lg" className="mt-6">
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border-subtle">
+          <div className="w-12 h-12 rounded-xl bg-accent-subtle flex items-center justify-center">
+            <Tag className="w-6 h-6 text-accent" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-text-primary">
+              Metadata
+            </h2>
+            <p className="text-sm text-text-muted">
+              Add custom key/value pairs to store additional information about
+              this video.
+            </p>
+          </div>
+        </div>
+
+        <MetadataEditor videoId={videoId} />
       </Card>
 
       {/* Delete Confirmation */}

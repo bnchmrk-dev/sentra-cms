@@ -18,6 +18,7 @@ import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-qu
 import { Route as AuthenticatedVideosIndexRouteImport } from './routes/_authenticated/videos/index'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedCompaniesIndexRouteImport } from './routes/_authenticated/companies/index'
+import { Route as WatchVideoIdTeamsUserIdRouteImport } from './routes/watch/$videoId/$teamsUserId'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
 import { Route as DemoApiTqTodosRouteImport } from './routes/demo/api.tq-todos'
@@ -79,6 +80,11 @@ const AuthenticatedCompaniesIndexRoute =
     path: '/companies/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const WatchVideoIdTeamsUserIdRoute = WatchVideoIdTeamsUserIdRouteImport.update({
+  id: '/watch/$videoId/$teamsUserId',
+  path: '/watch/$videoId/$teamsUserId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
   id: '/demo/start/server-funcs',
   path: '/demo/start/server-funcs',
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
+  '/watch/$videoId/$teamsUserId': typeof WatchVideoIdTeamsUserIdRoute
   '/companies': typeof AuthenticatedCompaniesIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/videos': typeof AuthenticatedVideosIndexRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
+  '/watch/$videoId/$teamsUserId': typeof WatchVideoIdTeamsUserIdRoute
   '/companies': typeof AuthenticatedCompaniesIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/videos': typeof AuthenticatedVideosIndexRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
+  '/watch/$videoId/$teamsUserId': typeof WatchVideoIdTeamsUserIdRoute
   '/_authenticated/companies/': typeof AuthenticatedCompaniesIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/videos/': typeof AuthenticatedVideosIndexRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/demo/api/tq-todos'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
+    | '/watch/$videoId/$teamsUserId'
     | '/companies'
     | '/users'
     | '/videos'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/demo/api/tq-todos'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
+    | '/watch/$videoId/$teamsUserId'
     | '/companies'
     | '/users'
     | '/videos'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/demo/api/tq-todos'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
+    | '/watch/$videoId/$teamsUserId'
     | '/_authenticated/companies/'
     | '/_authenticated/users/'
     | '/_authenticated/videos/'
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   DemoApiTqTodosRoute: typeof DemoApiTqTodosRoute
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
+  WatchVideoIdTeamsUserIdRoute: typeof WatchVideoIdTeamsUserIdRoute
   DemoStartSsrDataOnlyRoute: typeof DemoStartSsrDataOnlyRoute
   DemoStartSsrFullSsrRoute: typeof DemoStartSsrFullSsrRoute
   DemoStartSsrSpaModeRoute: typeof DemoStartSsrSpaModeRoute
@@ -384,6 +397,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/companies'
       preLoaderRoute: typeof AuthenticatedCompaniesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/watch/$videoId/$teamsUserId': {
+      id: '/watch/$videoId/$teamsUserId'
+      path: '/watch/$videoId/$teamsUserId'
+      fullPath: '/watch/$videoId/$teamsUserId'
+      preLoaderRoute: typeof WatchVideoIdTeamsUserIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/demo/start/server-funcs': {
       id: '/demo/start/server-funcs'
@@ -526,6 +546,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoApiTqTodosRoute: DemoApiTqTodosRoute,
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
   DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,
+  WatchVideoIdTeamsUserIdRoute: WatchVideoIdTeamsUserIdRoute,
   DemoStartSsrDataOnlyRoute: DemoStartSsrDataOnlyRoute,
   DemoStartSsrFullSsrRoute: DemoStartSsrFullSsrRoute,
   DemoStartSsrSpaModeRoute: DemoStartSsrSpaModeRoute,

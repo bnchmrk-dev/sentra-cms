@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Loader2, CheckCircle, Play } from 'lucide-react'
+import { createVttBlobUrl } from '../../../lib/srt'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const INDUCTION_VIDEO_ID = import.meta.env.VITE_INDUCTION_VIDEO_ID || ''
 
 export const Route = createFileRoute('/watch/$videoId/$teamsUserId')({
   component: WatchVideoPage,
@@ -12,6 +14,7 @@ interface VideoData {
   id: string
   title: string
   url: string
+  srt?: string | null
 }
 
 function WatchVideoPage() {
@@ -26,11 +29,20 @@ function WatchVideoPage() {
   const [hasStarted, setHasStarted] = useState(false)
   const [quizSent, setQuizSent] = useState(false)
 
-  // Fetch video details
+  const vttUrl = useMemo(() => {
+    if (!video?.srt) return null
+    return createVttBlobUrl(video.srt)
+  }, [video?.srt])
+
+  useEffect(() => {
+    return () => {
+      if (vttUrl) URL.revokeObjectURL(vttUrl)
+    }
+  }, [vttUrl])
+
   useEffect(() => {
     async function fetchVideo() {
       try {
-        // Fetch video details from public endpoint
         const res = await fetch(`${API_URL}/api/videos/${videoId}/public`)
         if (!res.ok) {
           throw new Error('Video not found')
@@ -169,7 +181,18 @@ function WatchVideoPage() {
           onTimeUpdate={handleTimeUpdate}
           onPlay={handlePlay}
           playsInline
-        />
+          crossOrigin="anonymous"
+        >
+          {vttUrl && (
+            <track
+              kind="captions"
+              src={vttUrl}
+              srcLang="en"
+              label="English"
+              default
+            />
+          )}
+        </video>
       </div>
 
       {/* Progress bar at bottom */}
@@ -183,14 +206,17 @@ function WatchVideoPage() {
       </div>
 
       {/* Completion overlay */}
-      {completed && quizSent && (
+      {completed && (videoId === INDUCTION_VIDEO_ID || quizSent) && (
         <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
           <div className="text-center text-white p-8 max-w-md">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Video Complete!</h2>
+            <h2 className="text-2xl font-bold mb-2">
+              {videoId === INDUCTION_VIDEO_ID ? 'Induction Complete!' : 'Video Complete!'}
+            </h2>
             <p className="text-gray-300 mb-4">
-              Great job! Your quiz questions have been sent to Teams. 
-              Head back to Teams to answer them.
+              {videoId === INDUCTION_VIDEO_ID
+                ? "Welcome aboard! You'll now start receiving your scheduled training content in Teams."
+                : 'Great job! Your quiz questions have been sent to Teams. Head back to Teams to answer them.'}
             </p>
             <p className="text-gray-500 text-sm">
               You can close this window now.

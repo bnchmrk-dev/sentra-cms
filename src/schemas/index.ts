@@ -245,6 +245,8 @@ export const videoBaseSchema = z.object({
   url: z.string(),
   publishDate: z.string(),
   companyId: z.string().nullable(), // null = visible to everyone
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+  srt: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -268,6 +270,8 @@ export const createVideoInputSchema = z.object({
   url: z.string().url('Invalid URL'),
   publishDate: z.string().min(1, 'Publish date is required'),
   companyId: z.string().nullable().optional(), // null = visible to everyone
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+  srt: z.string().nullable().optional(),
 })
 export type CreateVideoInput = z.infer<typeof createVideoInputSchema>
 
@@ -280,6 +284,8 @@ export const updateVideoInputSchema = z.object({
   url: z.string().url('Invalid URL').optional(),
   publishDate: z.string().optional(),
   companyId: z.string().nullable().optional(), // null = visible to everyone
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+  srt: z.string().nullable().optional(),
 })
 export type UpdateVideoInput = z.infer<typeof updateVideoInputSchema>
 
