@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Loader2, CheckCircle, Play } from 'lucide-react'
 import { createVttBlobUrl } from '../../../lib/srt'
+import * as microsoftTeams from '@microsoft/teams-js'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 const INDUCTION_VIDEO_ID = import.meta.env.VITE_INDUCTION_VIDEO_ID || ''
@@ -28,6 +29,13 @@ function WatchVideoPage() {
   const [completed, setCompleted] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
   const [quizSent, setQuizSent] = useState(false)
+
+  // Initialize Teams SDK so the iframe renders correctly in Teams task modules
+  useEffect(() => {
+    microsoftTeams.app.initialize().catch(() => {
+      // Silently fail — page also works outside Teams
+    })
+  }, [])
 
   const vttUrl = useMemo(() => {
     if (!video?.srt) return null
