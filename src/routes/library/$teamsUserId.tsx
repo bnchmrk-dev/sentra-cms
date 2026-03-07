@@ -87,10 +87,12 @@ function LibraryPage() {
     const watchUrl = `${CMS_URL}/watch/${videoId}/${teamsUserId}`
 
     if (teamsReady) {
-      microsoftTeams.dialog.url.open({
+      // Use legacy tasks API — more broadly supported in tab contexts
+      microsoftTeams.tasks.startTask({
         url: watchUrl,
         title: 'Watch Briefing',
-        size: { height: 'large' as any, width: 'large' as any },
+        height: 'large',
+        width: 'large',
       })
     } else {
       window.open(watchUrl, '_blank')
