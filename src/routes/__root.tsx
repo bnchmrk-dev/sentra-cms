@@ -3,6 +3,7 @@ import {
   Outlet,
   Scripts,
   createRootRouteWithContext,
+  useRouterState,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
@@ -58,6 +59,15 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 function RootComponent() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isWatchRoute = pathname.startsWith("/watch");
+
+  // Skip Clerk in the /watch route — it runs inside a Teams iframe
+  // where third-party cookies are blocked, causing Clerk to fail
+  if (isWatchRoute) {
+    return <Outlet />;
+  }
+
   return (
     <ClerkIntegrationProvider>
       <Outlet />
