@@ -87,16 +87,11 @@ function LibraryPage() {
     const watchUrl = `${CMS_URL}/watch/${videoId}/${teamsUserId}`
 
     if (teamsReady) {
-      microsoftTeams.dialog.url.open(
-        {
-          url: watchUrl,
-          title: 'Watch Briefing',
-          size: {
-            height: microsoftTeams.dialog.DialogDimension.Large,
-            width: microsoftTeams.dialog.DialogDimension.Large,
-          },
-        },
-      )
+      microsoftTeams.dialog.url.open({
+        url: watchUrl,
+        title: 'Watch Briefing',
+        size: { height: 'large' as any, width: 'large' as any },
+      })
     } else {
       window.open(watchUrl, '_blank')
     }
