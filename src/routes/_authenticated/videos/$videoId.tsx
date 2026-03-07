@@ -11,6 +11,7 @@ import {
   Play,
   Loader2,
   HelpCircle,
+  ImageIcon,
   Building2,
   Globe2,
   Send,
@@ -22,6 +23,7 @@ import {
   useVideo,
   useUpdateVideo,
   useReplaceVideoFile,
+  useUploadThumbnail,
   useDeleteVideo,
   useCompanies,
   useTeamsConversations,
@@ -53,6 +55,7 @@ function VideoDetailPage() {
   const { data: companiesData, isLoading: companiesLoading } = useCompanies()
   const updateVideo = useUpdateVideo()
   const replaceFile = useReplaceVideoFile()
+  const uploadThumbnail = useUploadThumbnail()
   const deleteVideo = useDeleteVideo()
 
   // Teams bot hooks
@@ -61,6 +64,7 @@ function VideoDetailPage() {
   const sendTeamsVideo = useSendTeamsVideo()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const thumbnailInputRef = useRef<HTMLInputElement>(null)
   const [title, setTitle] = useState('')
   const [publishDate, setPublishDate] = useState('')
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
@@ -75,6 +79,8 @@ function VideoDetailPage() {
   const [teamsSendSuccess, setTeamsSendSuccess] = useState(false)
   const [srt, setSrt] = useState('')
   const [newFile, setNewFile] = useState<File | null>(null)
+  const [newThumbnailFile, setNewThumbnailFile] = useState<File | null>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
 
   const video = data?.video
@@ -133,7 +139,14 @@ function VideoDetailPage() {
   useEffect(() => {
     if (video && !isInitialized) {
       setTitle(video.title)
-      setPublishDate(new Date(video.publishDate).toISOString().slice(0, 16))
+      // Format as local time for datetime-local input
+      const dt = new Date(video.publishDate)
+      const y = dt.getFullYear()
+      const m = String(dt.getMonth() + 1).padStart(2, '0')
+      const d = String(dt.getDate()).padStart(2, '0')
+      const h = String(dt.getHours()).padStart(2, '0')
+      const min = String(dt.getMinutes()).padStart(2, '0')
+      setPublishDate(`${y}-${m}-${d}T${h}:${min}`)
       setSelectedCompanyId(video.companyId)
       setSrt(video.srt || '')
       setIsInitialized(true)
@@ -168,6 +181,20 @@ function VideoDetailPage() {
     }
   }
 
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setNewThumbnailFile(file)
+      setThumbnailPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const clearNewThumbnail = () => {
+    if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+    setNewThumbnailFile(null)
+    setThumbnailPreview(null)
+  }
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
@@ -198,7 +225,8 @@ function VideoDetailPage() {
         new Date(video.publishDate).toISOString() ||
       selectedCompanyId !== video.companyId ||
       srt !== (video.srt || '') ||
-      newFile !== null)
+      newFile !== null ||
+      newThumbnailFile !== null)
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -211,6 +239,18 @@ function VideoDetailPage() {
         setNewFile(null)
       }
 
+      // Upload new thumbnail if selected
+      let newThumbnailUrl: string | undefined
+      if (newThumbnailFile) {
+        const thumbResult = await uploadThumbnail.mutateAsync({
+          file: newThumbnailFile,
+        })
+        newThumbnailUrl = thumbResult.url
+        setNewThumbnailFile(null)
+        if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+        setThumbnailPreview(null)
+      }
+
       // Update metadata if changed
       const titleChanged = title !== video.title
       const dateChanged =
@@ -219,7 +259,7 @@ function VideoDetailPage() {
       const companyChanged = selectedCompanyId !== video.companyId
       const srtChanged = srt !== (video.srt || '')
 
-      if (titleChanged || dateChanged || companyChanged || srtChanged) {
+      if (titleChanged || dateChanged || companyChanged || srtChanged || newThumbnailUrl) {
         await updateVideo.mutateAsync({
           id: video.id,
           data: {
@@ -229,6 +269,7 @@ function VideoDetailPage() {
               : undefined,
             companyId: companyChanged ? selectedCompanyId : undefined,
             srt: srtChanged ? (srt || null) : undefined,
+            thumbnailUrl: newThumbnailUrl,
           },
         })
       }
@@ -271,7 +312,7 @@ function VideoDetailPage() {
     )
   }
 
-  const isSaving = updateVideo.isPending || replaceFile.isPending
+  const isSaving = updateVideo.isPending || replaceFile.isPending || uploadThumbnail.isPending
 
   return (
     <div className="animate-fade-in max-w-4xl">
@@ -367,6 +408,58 @@ function VideoDetailPage() {
               placeholder="Enter video title"
               required
             />
+
+            {/* Thumbnail */}
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                <ImageIcon className="w-4 h-4 inline mr-2" />
+                Thumbnail
+              </label>
+              {(thumbnailPreview || video.thumbnailUrl) ? (
+                <div className="relative inline-block">
+                  <img
+                    src={thumbnailPreview || video.thumbnailUrl || ''}
+                    alt="Thumbnail"
+                    className="h-32 rounded-lg object-cover border border-border-default"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newThumbnailFile) {
+                        clearNewThumbnail()
+                      } else {
+                        thumbnailInputRef.current?.click()
+                      }
+                    }}
+                    className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-bg-primary/80 border border-border-default
+                      text-xs text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    {newThumbnailFile ? 'Undo' : 'Replace'}
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed border-border-default rounded-xl p-4 text-center
+                    hover:border-accent hover:bg-bg-hover transition-colors cursor-pointer"
+                  onClick={() => thumbnailInputRef.current?.click()}
+                >
+                  <ImageIcon className="w-6 h-6 text-text-muted mx-auto mb-1" />
+                  <p className="text-sm text-text-secondary">
+                    Click to upload a thumbnail
+                  </p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    JPEG, PNG, or WebP
+                  </p>
+                </div>
+              )}
+              <input
+                ref={thumbnailInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleThumbnailSelect}
+                className="hidden"
+              />
+            </div>
 
             {/* Publish Date */}
             <div>
@@ -547,9 +640,9 @@ function VideoDetailPage() {
               </div>
             </div>
 
-            {(updateVideo.error || replaceFile.error) && (
+            {(updateVideo.error || replaceFile.error || uploadThumbnail.error) && (
               <Alert variant="error">
-                {updateVideo.error?.message || replaceFile.error?.message}
+                {updateVideo.error?.message || replaceFile.error?.message || uploadThumbnail.error?.message}
               </Alert>
             )}
 
