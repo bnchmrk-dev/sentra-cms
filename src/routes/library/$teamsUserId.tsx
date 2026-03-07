@@ -4,12 +4,11 @@ import {
   Loader2,
   Play,
   Film,
-  ChevronDown,
-  ChevronUp,
   CheckCircle2,
   XCircle,
   Flame,
   X,
+  ChevronDown,
 } from 'lucide-react'
 import * as microsoftTeams from '@microsoft/teams-js'
 
@@ -55,7 +54,7 @@ function LibraryPage() {
     title: string
   } | null>(null)
 
-  // Initialize Teams SDK (still needed for theme/context, just not for dialogs)
+  // Initialize Teams SDK
   useEffect(() => {
     microsoftTeams.app.initialize().catch(() => {})
   }, [])
@@ -116,8 +115,14 @@ function LibraryPage() {
     <div className="min-h-screen bg-[#1f1f1f] text-white">
       {/* Video Player Modal */}
       {watchingVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-          <div className="relative w-full h-full max-w-5xl max-h-[90vh] m-4 bg-[#1a1a1a] rounded-xl overflow-hidden flex flex-col">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          onClick={closeVideo}
+        >
+          <div
+            className="relative w-full h-full max-w-5xl max-h-[90vh] m-4 bg-[#1a1a1a] rounded-xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
             <div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-gray-700">
               <h2 className="text-sm font-medium text-gray-200 truncate">
@@ -171,7 +176,7 @@ function LibraryPage() {
           <p className="text-gray-500">No briefings available yet.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2 p-4">
+        <div className="flex flex-col gap-3 p-4">
           {videos.map((video) => {
             const isExpanded = expandedVideo === video.id
             const hasQuestions = video.questions.length > 0
@@ -185,25 +190,47 @@ function LibraryPage() {
             return (
               <div
                 key={video.id}
-                className="bg-[#2d2d2d] rounded-lg overflow-hidden"
+                className="bg-[#2d2d2d] rounded-xl overflow-hidden"
               >
-                {/* Video Row */}
-                <div className="flex items-center gap-4 p-4">
-                  {/* Play button */}
+                {/* Video Row — clickable to expand */}
+                <div
+                  className="flex items-center gap-4 p-3 cursor-pointer hover:bg-[#343434] transition-colors"
+                  onClick={() => toggleExpand(video.id)}
+                >
+                  {/* Thumbnail */}
                   <button
-                    onClick={() => openVideo(video.id, video.title)}
-                    className="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openVideo(video.id, video.title)
+                    }}
+                    className="group relative flex-shrink-0 w-28 h-16 rounded-lg overflow-hidden bg-[#1a1a1a]"
                     title="Watch briefing"
                   >
-                    <Play className="w-5 h-5 text-white ml-0.5" />
+                    {video.thumbnailUrl ? (
+                      <img
+                        src={video.thumbnailUrl}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Film className="w-7 h-7 text-gray-600" />
+                      </div>
+                    )}
+                    {/* Play overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/50 transition-colors">
+                      <div className="w-9 h-9 rounded-full bg-white/90 group-hover:bg-white flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity shadow-lg">
+                        <Play className="w-4 h-4 text-gray-900 ml-0.5" />
+                      </div>
+                    </div>
                   </button>
 
                   {/* Title & date */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-100 truncate">
+                    <h3 className="font-medium text-[15px] text-gray-100 truncate">
                       {video.title}
                     </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-gray-500 mt-1">
                       {new Date(video.publishDate).toLocaleDateString('en-GB', {
                         day: 'numeric',
                         month: 'short',
@@ -215,7 +242,7 @@ function LibraryPage() {
                   {/* Quiz score badge */}
                   {hasQuestions && answeredQuestions.length > 0 && (
                     <span
-                      className={`flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-full ${
+                      className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full ${
                         correctAnswers.length === video.questions.length
                           ? 'bg-green-900/40 text-green-400'
                           : 'bg-yellow-900/40 text-yellow-400'
@@ -225,34 +252,31 @@ function LibraryPage() {
                     </span>
                   )}
 
-                  {/* Expand toggle */}
+                  {/* Expand indicator */}
                   {hasQuestions && (
-                    <button
-                      onClick={() => toggleExpand(video.id)}
-                      className="flex-shrink-0 p-1.5 rounded hover:bg-[#383838] text-gray-400 hover:text-gray-200 transition-colors"
-                      title={isExpanded ? 'Hide questions' : 'Show questions'}
-                    >
-                      {isExpanded ? (
-                        <ChevronUp className="w-5 h-5" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5" />
-                      )}
-                    </button>
+                    <ChevronDown
+                      className={`flex-shrink-0 w-5 h-5 text-gray-500 transition-transform duration-200 ${
+                        isExpanded ? 'rotate-180' : ''
+                      }`}
+                    />
                   )}
                 </div>
 
                 {/* Expanded Questions */}
                 {isExpanded && hasQuestions && (
-                  <div className="border-t border-gray-700 px-4 py-3 space-y-4">
+                  <div className="border-t border-gray-700/50 px-5 py-4 space-y-5">
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Quiz Results
+                    </p>
                     {video.questions.map((question, qIndex) => (
-                      <div key={question.id} className="space-y-2">
-                        <p className="text-sm text-gray-300">
-                          <span className="text-gray-500 font-medium">
-                            Q{qIndex + 1}.
-                          </span>{' '}
+                      <div key={question.id} className="space-y-3">
+                        <p className="text-sm text-gray-200 font-medium">
+                          <span className="text-indigo-400 mr-1.5">
+                            {qIndex + 1}.
+                          </span>
                           {question.text}
                         </p>
-                        <div className="space-y-1 ml-6">
+                        <div className="space-y-1.5 ml-5">
                           {question.answers.map((answer) => {
                             const wasSelected =
                               question.userAnswer?.selectedAnswerIds.includes(
@@ -261,45 +285,63 @@ function LibraryPage() {
                             const isCorrectAnswer = answer.isCorrect
                             const hasAnswered = question.userAnswer !== null
 
-                            let answerStyle =
-                              'text-gray-500 bg-transparent'
+                            // Determine styling
+                            let containerStyle = 'border border-gray-700/50 text-gray-500'
+                            let icon: React.ReactNode = null
+                            let label: React.ReactNode = null
+
                             if (hasAnswered) {
                               if (wasSelected && isCorrectAnswer) {
-                                answerStyle =
-                                  'text-green-400 bg-green-900/20'
+                                containerStyle =
+                                  'border border-green-700/60 bg-green-900/20 text-green-300'
+                                icon = (
+                                  <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
+                                )
+                                label = (
+                                  <span className="ml-auto text-[10px] uppercase font-semibold tracking-wider text-green-500">
+                                    Correct
+                                  </span>
+                                )
                               } else if (wasSelected && !isCorrectAnswer) {
-                                answerStyle =
-                                  'text-red-400 bg-red-900/20'
+                                containerStyle =
+                                  'border border-red-700/60 bg-red-900/20 text-red-300'
+                                icon = (
+                                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                                )
+                                label = (
+                                  <span className="ml-auto text-[10px] uppercase font-semibold tracking-wider text-red-500">
+                                    Your answer
+                                  </span>
+                                )
                               } else if (isCorrectAnswer) {
-                                answerStyle =
-                                  'text-green-400/60 bg-transparent'
+                                containerStyle =
+                                  'border border-green-700/40 bg-green-900/10 text-green-400/80'
+                                icon = (
+                                  <CheckCircle2 className="w-4 h-4 text-green-500/60 flex-shrink-0" />
+                                )
+                                label = (
+                                  <span className="ml-auto text-[10px] uppercase font-semibold tracking-wider text-green-600">
+                                    Correct answer
+                                  </span>
+                                )
                               }
                             }
 
                             return (
                               <div
                                 key={answer.id}
-                                className={`flex items-center gap-2 text-xs px-2 py-1 rounded ${answerStyle}`}
+                                className={`flex items-center gap-2.5 text-sm px-3 py-2 rounded-lg ${containerStyle}`}
                               >
-                                {hasAnswered && wasSelected && isCorrectAnswer && (
-                                  <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-                                )}
-                                {hasAnswered && wasSelected && !isCorrectAnswer && (
-                                  <XCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                                )}
-                                {hasAnswered && !wasSelected && isCorrectAnswer && (
-                                  <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 opacity-60" />
-                                )}
-                                {(!hasAnswered ||
-                                  (!wasSelected && !isCorrectAnswer)) && (
-                                  <span className="w-3.5 h-3.5 flex-shrink-0" />
+                                {icon || (
+                                  <span className="w-4 h-4 rounded-full border border-gray-600 flex-shrink-0" />
                                 )}
                                 <span>{answer.text}</span>
+                                {label}
                               </div>
                             )
                           })}
                           {!question.userAnswer && (
-                            <p className="text-xs text-gray-600 italic ml-6">
+                            <p className="text-sm text-gray-600 italic py-1">
                               Not answered yet
                             </p>
                           )}
