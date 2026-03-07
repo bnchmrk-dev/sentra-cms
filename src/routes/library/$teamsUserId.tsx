@@ -37,9 +37,16 @@ interface Question {
 interface VideoItem {
   id: string
   title: string
+  url: string
+  srt: string | null
   thumbnailUrl: string | null
   publishDate: string
   questions: Question[]
+}
+
+/** Convert SRT timestamps to VTT format (comma → dot) */
+function srtToVtt(srt: string): string {
+  return srt.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2')
 }
 
 function LibraryPage() {
@@ -52,6 +59,8 @@ function LibraryPage() {
   const [watchingVideo, setWatchingVideo] = useState<{
     id: string
     title: string
+    url: string
+    srt: string | null
   } | null>(null)
 
   // Initialize Teams SDK
@@ -80,8 +89,13 @@ function LibraryPage() {
     fetchVideos()
   }, [teamsUserId])
 
-  const openVideo = (videoId: string, title: string) => {
-    setWatchingVideo({ id: videoId, title })
+  const openVideo = (video: VideoItem) => {
+    setWatchingVideo({
+      id: video.id,
+      title: video.title,
+      url: video.url,
+      srt: video.srt,
+    })
   }
 
   const closeVideo = () => {
@@ -116,31 +130,43 @@ function LibraryPage() {
       {/* Video Player Modal */}
       {watchingVideo && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
           onClick={closeVideo}
         >
           <div
-            className="relative w-full h-full max-w-5xl max-h-[90vh] m-4 bg-[#1a1a1a] rounded-xl overflow-hidden flex flex-col"
+            className="relative w-full max-w-5xl mx-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-gray-700">
-              <h2 className="text-sm font-medium text-gray-200 truncate">
-                {watchingVideo.title}
-              </h2>
-              <button
-                onClick={closeVideo}
-                className="p-1.5 rounded hover:bg-[#383838] text-gray-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            {/* Iframe */}
-            <iframe
-              src={`/watch/${watchingVideo.id}/${teamsUserId}`}
-              className="flex-1 w-full border-0"
-              allow="autoplay; fullscreen"
-            />
+            {/* Close button */}
+            <button
+              onClick={closeVideo}
+              className="absolute -top-10 right-0 p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            {/* Video */}
+            <video
+              src={watchingVideo.url}
+              controls
+              autoPlay
+              className="w-full rounded-lg"
+            >
+              {watchingVideo.srt && (
+                <track
+                  kind="subtitles"
+                  src={`data:text/vtt;charset=utf-8,${encodeURIComponent(
+                    'WEBVTT\n\n' + srtToVtt(watchingVideo.srt),
+                  )}`}
+                  srcLang="en"
+                  label="English"
+                  default
+                />
+              )}
+            </video>
+            {/* Title below video */}
+            <p className="text-sm text-gray-400 mt-3 truncate">
+              {watchingVideo.title}
+            </p>
           </div>
         </div>
       )}
@@ -201,7 +227,7 @@ function LibraryPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      openVideo(video.id, video.title)
+                      openVideo(video)
                     }}
                     className="group relative flex-shrink-0 w-28 h-16 rounded-lg overflow-hidden bg-[#1a1a1a]"
                     title="Watch briefing"
