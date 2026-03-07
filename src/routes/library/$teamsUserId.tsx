@@ -14,7 +14,6 @@ import {
 import * as microsoftTeams from '@microsoft/teams-js'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-const CMS_URL = import.meta.env.VITE_CMS_URL || 'http://localhost:3000'
 
 export const Route = createFileRoute('/library/$teamsUserId')({
   component: LibraryPage,
@@ -133,7 +132,7 @@ function LibraryPage() {
             </div>
             {/* Iframe */}
             <iframe
-              src={`${CMS_URL}/watch/${watchingVideo.id}/${teamsUserId}`}
+              src={`/watch/${watchingVideo.id}/${teamsUserId}`}
               className="flex-1 w-full border-0"
               allow="autoplay; fullscreen"
             />
