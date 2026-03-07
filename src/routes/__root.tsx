@@ -60,11 +60,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isWatchRoute = pathname.startsWith("/watch");
+  const isTeamsRoute =
+    pathname.startsWith("/watch") || pathname.startsWith("/library");
 
-  // Skip Clerk in the /watch route — it runs inside a Teams iframe
+  // Skip Clerk in Teams routes — they run inside a Teams iframe
   // where third-party cookies are blocked, causing Clerk to fail
-  if (isWatchRoute) {
+  if (isTeamsRoute) {
     return <Outlet />;
   }
 
