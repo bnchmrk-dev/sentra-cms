@@ -42,6 +42,7 @@ interface UploadVideoParams {
   title: string
   publishDate: string
   companyId?: string | null // null = visible to everyone
+  thumbnailUrl?: string | null
   onProgress?: (progress: {
     loaded: number
     total: number
@@ -69,6 +70,7 @@ export function useUploadVideo() {
       title,
       publishDate,
       companyId,
+      thumbnailUrl,
       onProgress,
     }: UploadVideoParams) => {
       // Step 1: Get a scoped client token from the API
@@ -91,6 +93,7 @@ export function useUploadVideo() {
         {
           title,
           url: blob.url,
+          thumbnailUrl: thumbnailUrl || null,
           publishDate,
           companyId: companyId || null,
         },
@@ -167,6 +170,43 @@ export function useReplaceVideoFile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: VIDEOS_KEY })
+    },
+  })
+}
+
+/**
+ * Upload a thumbnail image using client-side direct-to-blob upload.
+ * Returns the blob URL for use when creating/updating a video.
+ */
+export function useUploadThumbnail() {
+  const api = useApi()
+
+  return useMutation({
+    mutationFn: async ({
+      file,
+      onProgress,
+    }: {
+      file: File
+      onProgress?: (progress: {
+        loaded: number
+        total: number
+        percentage: number
+      }) => void
+    }) => {
+      // Step 1: Get a scoped client token for thumbnail uploads
+      const { clientToken } = await api.post<{ clientToken: string }>(
+        '/api/videos/generate-thumbnail-upload-token',
+        { filename: file.name },
+      )
+
+      // Step 2: Upload directly to Vercel Blob
+      const blob = await put(file.name, file, {
+        access: 'public',
+        token: clientToken,
+        onUploadProgress: onProgress,
+      })
+
+      return { url: blob.url }
     },
   })
 }

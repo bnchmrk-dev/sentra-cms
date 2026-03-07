@@ -6,10 +6,11 @@ import {
   Upload,
   X,
   FileVideo,
+  ImageIcon,
   Building2,
   Globe2,
 } from 'lucide-react'
-import { useUploadVideo, useCompanies } from '../../../hooks'
+import { useUploadVideo, useUploadThumbnail, useCompanies } from '../../../hooks'
 import { Card, Button, Input, Alert, Combobox } from '../../../components/ui'
 import { PageHeader } from '../../../components/layout'
 
@@ -20,16 +21,27 @@ export const Route = createFileRoute('/_authenticated/videos/new')({
 function NewVideoPage() {
   const navigate = useNavigate()
   const uploadVideo = useUploadVideo()
+  const uploadThumbnail = useUploadThumbnail()
   const { data: companiesData, isLoading: companiesLoading } = useCompanies()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const thumbnailInputRef = useRef<HTMLInputElement>(null)
 
   const [title, setTitle] = useState('')
-  const [publishDate, setPublishDate] = useState(
-    new Date().toISOString().slice(0, 16), // Default to now, format: YYYY-MM-DDTHH:mm
-  )
+  const [publishDate, setPublishDate] = useState(() => {
+    // Format as local time for datetime-local input (YYYY-MM-DDTHH:mm)
+    const now = new Date()
+    const y = now.getFullYear()
+    const m = String(now.getMonth() + 1).padStart(2, '0')
+    const d = String(now.getDate()).padStart(2, '0')
+    const h = String(now.getHours()).padStart(2, '0')
+    const min = String(now.getMinutes()).padStart(2, '0')
+    return `${y}-${m}-${d}T${h}:${min}`
+  })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
     null,
   )
@@ -80,6 +92,20 @@ function NewVideoPage() {
     }
   }
 
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setThumbnailFile(file)
+      setThumbnailPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const clearThumbnail = () => {
+    if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+    setThumbnailFile(null)
+    setThumbnailPreview(null)
+  }
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
@@ -93,15 +119,26 @@ function NewVideoPage() {
     if (!selectedFile || !title.trim()) return
 
     try {
+      // Upload thumbnail first if selected
+      let thumbnailUrl: string | null = null
+      if (thumbnailFile) {
+        setUploadProgress('Uploading thumbnail...')
+        const thumbResult = await uploadThumbnail.mutateAsync({
+          file: thumbnailFile,
+        })
+        thumbnailUrl = thumbResult.url
+      }
+
       setUploadProgress('Preparing upload...')
       const result = await uploadVideo.mutateAsync({
         file: selectedFile,
         title: title.trim(),
         publishDate: new Date(publishDate).toISOString(),
         companyId: selectedCompanyId,
+        thumbnailUrl,
         onProgress: ({ percentage }) => {
           if (percentage < 100) {
-            setUploadProgress(`Uploading... ${Math.round(percentage)}%`)
+            setUploadProgress(`Uploading video... ${Math.round(percentage)}%`)
           } else {
             setUploadProgress('Saving video record...')
           }
@@ -214,6 +251,53 @@ function NewVideoPage() {
                 </>
               )}
             </div>
+          </div>
+
+          {/* Thumbnail Upload */}
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">
+              Thumbnail Image
+            </label>
+            {thumbnailPreview ? (
+              <div className="relative inline-block">
+                <img
+                  src={thumbnailPreview}
+                  alt="Thumbnail preview"
+                  className="h-32 rounded-lg object-cover border border-border-default"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    clearThumbnail()
+                  }}
+                  className="absolute -top-2 -right-2 p-1 rounded-full bg-bg-primary border border-border-default hover:bg-bg-hover text-text-muted hover:text-text-primary transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div
+                className="border-2 border-dashed border-border-default rounded-xl p-6 text-center
+                  hover:border-accent hover:bg-bg-hover transition-colors cursor-pointer"
+                onClick={() => thumbnailInputRef.current?.click()}
+              >
+                <ImageIcon className="w-8 h-8 text-text-muted mx-auto mb-2" />
+                <p className="text-sm text-text-secondary">
+                  Click to upload a thumbnail image
+                </p>
+                <p className="text-xs text-text-muted mt-1">
+                  JPEG, PNG, or WebP. Max 10MB.
+                </p>
+              </div>
+            )}
+            <input
+              ref={thumbnailInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleThumbnailSelect}
+              className="hidden"
+            />
           </div>
 
           {/* Title */}

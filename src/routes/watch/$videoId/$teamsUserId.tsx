@@ -216,7 +216,7 @@ function WatchVideoPage() {
             <p className="text-gray-300 mb-4">
               {videoId === INDUCTION_VIDEO_ID
                 ? "Welcome aboard! You'll now start receiving your scheduled training content in Teams."
-                : 'Great job! Your quiz questions have been sent to Teams. Head back to Teams to answer them.'}
+                : 'Great Job! Make sure to answer the follow-up question in Teams to keep your streak going!'}
             </p>
             <p className="text-gray-500 text-sm">
               You can close this window now.

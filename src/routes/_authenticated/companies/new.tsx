@@ -14,13 +14,14 @@ function NewCompanyPage() {
   const createCompany = useCreateCompany();
   const [name, setName] = useState("");
   const [timezone, setTimezone] = useState("UTC");
+  const [maxUsers, setMaxUsers] = useState<number | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     try {
-      const result = await createCompany.mutateAsync({ name, timezone });
+      const result = await createCompany.mutateAsync({ name, timezone, maxUsers });
       // Navigate to the new company's detail page
       navigate({ to: "/companies/$companyId", params: { companyId: result.company.id } });
     } catch {
@@ -75,6 +76,25 @@ function NewCompanyPage() {
             value={timezone}
             onChange={setTimezone}
           />
+
+          <div>
+            <Input
+              label="Maximum Users"
+              type="number"
+              min={1}
+              value={maxUsers ?? ""}
+              onChange={(e) =>
+                setMaxUsers(
+                  e.target.value ? parseInt(e.target.value, 10) : null
+                )
+              }
+              placeholder="Unlimited"
+            />
+            <p className="mt-1 text-sm text-text-muted">
+              Limit the number of users who can register. Leave empty for
+              unlimited.
+            </p>
+          </div>
 
           {createCompany.error && (
             <Alert variant="error">{createCompany.error.message}</Alert>

@@ -130,6 +130,7 @@ export const createCompanyInputSchema = z.object({
     .min(1, 'Company name is required')
     .max(100, 'Company name is too long'),
   timezone: z.string().default('UTC'),
+  maxUsers: z.number().int().positive().nullable().optional(),
 })
 export type CreateCompanyInput = z.infer<typeof createCompanyInputSchema>
 
@@ -243,6 +244,7 @@ export const videoBaseSchema = z.object({
   id: z.string(),
   title: z.string(),
   url: z.string(),
+  thumbnailUrl: z.string().nullable().optional(),
   publishDate: z.string(),
   companyId: z.string().nullable(), // null = visible to everyone
   metadata: z.record(z.string(), z.string()).nullable().optional(),
@@ -268,6 +270,7 @@ export type VideoWithCompany = z.infer<typeof videoWithCompanySchema>
 export const createVideoInputSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title is too long'),
   url: z.string().url('Invalid URL'),
+  thumbnailUrl: z.string().url('Invalid thumbnail URL').nullable().optional(),
   publishDate: z.string().min(1, 'Publish date is required'),
   companyId: z.string().nullable().optional(), // null = visible to everyone
   metadata: z.record(z.string(), z.string()).nullable().optional(),
@@ -282,6 +285,7 @@ export const updateVideoInputSchema = z.object({
     .max(200, 'Title is too long')
     .optional(),
   url: z.string().url('Invalid URL').optional(),
+  thumbnailUrl: z.string().url('Invalid thumbnail URL').nullable().optional(),
   publishDate: z.string().optional(),
   companyId: z.string().nullable().optional(), // null = visible to everyone
   metadata: z.record(z.string(), z.string()).nullable().optional(),
