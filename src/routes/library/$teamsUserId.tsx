@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   XCircle,
   Flame,
+  X,
 } from 'lucide-react'
 import * as microsoftTeams from '@microsoft/teams-js'
 
@@ -49,17 +50,15 @@ function LibraryPage() {
   const [streak, setStreak] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [teamsReady, setTeamsReady] = useState(false)
   const [expandedVideo, setExpandedVideo] = useState<string | null>(null)
+  const [watchingVideo, setWatchingVideo] = useState<{
+    id: string
+    title: string
+  } | null>(null)
 
-  // Initialize Teams SDK
+  // Initialize Teams SDK (still needed for theme/context, just not for dialogs)
   useEffect(() => {
-    microsoftTeams.app
-      .initialize()
-      .then(() => setTeamsReady(true))
-      .catch(() => {
-        setTeamsReady(false)
-      })
+    microsoftTeams.app.initialize().catch(() => {})
   }, [])
 
   // Fetch videos
@@ -83,20 +82,12 @@ function LibraryPage() {
     fetchVideos()
   }, [teamsUserId])
 
-  const openVideo = (videoId: string) => {
-    const watchUrl = `${CMS_URL}/watch/${videoId}/${teamsUserId}`
+  const openVideo = (videoId: string, title: string) => {
+    setWatchingVideo({ id: videoId, title })
+  }
 
-    if (teamsReady) {
-      // Use legacy tasks API — more broadly supported in tab contexts
-      microsoftTeams.tasks.startTask({
-        url: watchUrl,
-        title: 'Watch Briefing',
-        height: 'large',
-        width: 'large',
-      })
-    } else {
-      window.open(watchUrl, '_blank')
-    }
+  const closeVideo = () => {
+    setWatchingVideo(null)
   }
 
   const toggleExpand = (videoId: string) => {
@@ -124,6 +115,32 @@ function LibraryPage() {
 
   return (
     <div className="min-h-screen bg-[#1f1f1f] text-white">
+      {/* Video Player Modal */}
+      {watchingVideo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+          <div className="relative w-full h-full max-w-5xl max-h-[90vh] m-4 bg-[#1a1a1a] rounded-xl overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-gray-700">
+              <h2 className="text-sm font-medium text-gray-200 truncate">
+                {watchingVideo.title}
+              </h2>
+              <button
+                onClick={closeVideo}
+                className="p-1.5 rounded hover:bg-[#383838] text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {/* Iframe */}
+            <iframe
+              src={`${CMS_URL}/watch/${watchingVideo.id}/${teamsUserId}`}
+              className="flex-1 w-full border-0"
+              allow="autoplay; fullscreen"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[#1f1f1f] border-b border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -175,7 +192,7 @@ function LibraryPage() {
                 <div className="flex items-center gap-4 p-4">
                   {/* Play button */}
                   <button
-                    onClick={() => openVideo(video.id)}
+                    onClick={() => openVideo(video.id, video.title)}
                     className="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center transition-colors"
                     title="Watch briefing"
                   >
