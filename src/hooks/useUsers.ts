@@ -3,9 +3,11 @@ import { useApi } from '../lib/api'
 import {
   usersResponseSchema,
   userResponseSchema,
+  userStatsResponseSchema,
   messageResponseSchema,
   type UsersResponse,
   type UserResponse,
+  type UserStatsResponse,
   type UpdateUserRoleInput,
   type CreateUserInput,
 } from '../schemas'
@@ -36,6 +38,17 @@ export function useUser(id: string | undefined) {
     queryKey: [...USERS_KEY, id],
     queryFn: () =>
       api.get<UserResponse>(`/api/users/${id}`, undefined, userResponseSchema),
+    enabled: !!id,
+  })
+}
+
+export function useUserStats(id: string | undefined) {
+  const api = useApi()
+
+  return useQuery({
+    queryKey: [...USERS_KEY, id, 'stats'],
+    queryFn: () =>
+      api.get<UserStatsResponse>(`/api/users/${id}/stats`, undefined, userStatsResponseSchema),
     enabled: !!id,
   })
 }

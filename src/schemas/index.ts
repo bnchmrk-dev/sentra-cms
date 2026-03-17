@@ -381,6 +381,47 @@ export const questionsResponseSchema = z.object({
 export type QuestionsResponse = z.infer<typeof questionsResponseSchema>
 
 // ============================================
+// Stats Schemas (User & Company engagement)
+// ============================================
+
+export const userStatsSchema = z.object({
+  inductionCompleted: z.boolean(),
+  inductionCompletedAt: z.string().nullable(),
+  videosSent: z.number(),
+  videosWatched: z.number(),
+  videosCompleted: z.number(),
+  questionsAnswered: z.number(),
+  questionsCorrect: z.number(),
+  correctnessRate: z.number(),
+  streak: z.number(),
+  lastActive: z.string().nullable(),
+})
+export type UserStats = z.infer<typeof userStatsSchema>
+
+export const userStatsResponseSchema = z.object({
+  stats: userStatsSchema,
+})
+export type UserStatsResponse = z.infer<typeof userStatsResponseSchema>
+
+export const companyStatsSchema = z.object({
+  totalUsers: z.number(),
+  onboardedUsers: z.number(),
+  videosSent: z.number(),
+  videosWatched: z.number(),
+  videosCompleted: z.number(),
+  questionsAnswered: z.number(),
+  questionsCorrect: z.number(),
+  correctnessRate: z.number(),
+  averageStreak: z.number(),
+})
+export type CompanyStats = z.infer<typeof companyStatsSchema>
+
+export const companyStatsResponseSchema = z.object({
+  stats: companyStatsSchema,
+})
+export type CompanyStatsResponse = z.infer<typeof companyStatsResponseSchema>
+
+// ============================================
 // Error Schema
 // ============================================
 

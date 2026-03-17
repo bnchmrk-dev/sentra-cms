@@ -11,8 +11,18 @@ import {
   Mail,
   Calendar,
   RotateCcw,
+  BarChart3,
+  Play,
+  Eye,
+  CheckCircle2,
+  HelpCircle,
+  Target,
+  Flame,
+  Clock,
+  GraduationCap,
 } from "lucide-react";
-import { useUser, useUpdateUserRole, useDeleteUser, useResetUser, useCompany } from "../../../hooks";
+import { useUser, useUserStats, useUpdateUserRole, useDeleteUser, useResetUser, useCompany } from "../../../hooks";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   Button,
@@ -49,7 +59,9 @@ const roleDescriptions: Record<UserRole, string> = {
 function UserDetailPage() {
   const { userId } = Route.useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useUser(userId);
+  const { data: statsData, isLoading: statsLoading } = useUserStats(userId);
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
   const resetUser = useResetUser();
@@ -115,6 +127,7 @@ function UserDetailPage() {
   const handleReset = async () => {
     try {
       await resetUser.mutateAsync(userId);
+      queryClient.invalidateQueries({ queryKey: ['users', userId, 'stats'] });
       setShowResetConfirm(false);
     } catch {
       // Error handled by mutation
@@ -216,6 +229,110 @@ function UserDetailPage() {
             </div>
           </div>
         </div>
+      </Card>
+
+      {/* Engagement Stats */}
+      <Card variant="default" padding="lg" className="mb-6">
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border-subtle">
+          <div className="w-12 h-12 rounded-lg bg-accent-subtle flex items-center justify-center">
+            <BarChart3 className="w-6 h-6 text-accent" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-text-primary">
+              Engagement Stats
+            </h2>
+            <p className="text-sm text-text-muted">
+              User activity and progress overview.
+            </p>
+          </div>
+        </div>
+
+        {statsLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="w-6 h-6 animate-spin text-accent" />
+          </div>
+        ) : statsData?.stats ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <GraduationCap className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Induction</p>
+              </div>
+              <div className="mt-1">
+                <Badge variant={statsData.stats.inductionCompleted ? "live" : "default"} dot>
+                  {statsData.stats.inductionCompleted ? "Completed" : "Not Completed"}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <Play className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Videos Sent</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">{statsData.stats.videosSent}</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <Eye className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Videos Watched</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">{statsData.stats.videosWatched}</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircle2 className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Videos Completed</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">{statsData.stats.videosCompleted}</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <HelpCircle className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Questions Answered</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">
+                {statsData.stats.questionsAnswered}
+                <span className="text-sm font-normal text-text-muted ml-1">
+                  ({statsData.stats.questionsCorrect} correct)
+                </span>
+              </p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <Target className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Correctness</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">{statsData.stats.correctnessRate}%</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <Flame className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Streak</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">{statsData.stats.streak}</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <Clock className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Last Active</p>
+              </div>
+              <p className="text-sm font-medium text-text-primary">
+                {statsData.stats.lastActive
+                  ? new Date(statsData.stats.lastActive).toLocaleDateString()
+                  : "Never"}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted">No stats available.</p>
+        )}
       </Card>
 
       {/* Role Management */}

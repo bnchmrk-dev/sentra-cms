@@ -3,10 +3,12 @@ import { useApi } from "../lib/api";
 import {
   companiesResponseSchema,
   companyResponseSchema,
+  companyStatsResponseSchema,
   domainResponseSchema,
   messageResponseSchema,
   type CompaniesResponse,
   type CompanyResponse,
+  type CompanyStatsResponse,
   type CreateCompanyInput,
   type UpdateCompanyInput,
   type AddDomainInput,
@@ -30,6 +32,17 @@ export function useCompany(id: string | undefined) {
   return useQuery({
     queryKey: [...COMPANIES_KEY, id],
     queryFn: () => api.get<CompanyResponse>(`/api/companies/${id}`, undefined, companyResponseSchema),
+    enabled: !!id,
+  });
+}
+
+export function useCompanyStats(id: string | undefined) {
+  const api = useApi();
+
+  return useQuery({
+    queryKey: [...COMPANIES_KEY, id, 'stats'],
+    queryFn: () =>
+      api.get<CompanyStatsResponse>(`/api/companies/${id}/stats`, undefined, companyStatsResponseSchema),
     enabled: !!id,
   });
 }

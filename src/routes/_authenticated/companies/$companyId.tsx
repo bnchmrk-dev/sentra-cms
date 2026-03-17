@@ -10,9 +10,18 @@ import {
   Loader2,
   Save,
   Clock,
+  BarChart3,
+  Play,
+  Eye,
+  CheckCircle2,
+  HelpCircle,
+  Target,
+  Flame,
+  GraduationCap,
 } from "lucide-react";
 import {
   useCompany,
+  useCompanyStats,
   useUpdateCompany,
   useDeleteCompany,
   useAddDomain,
@@ -39,6 +48,7 @@ function CompanyDetailPage() {
   const { companyId } = Route.useParams();
   const navigate = useNavigate();
   const { data, isLoading, error } = useCompany(companyId);
+  const { data: statsData, isLoading: statsLoading } = useCompanyStats(companyId);
   const updateCompany = useUpdateCompany();
   const deleteCompany = useDeleteCompany();
   const addDomain = useAddDomain();
@@ -442,6 +452,99 @@ function CompanyDetailPage() {
               </div>
             ))}
           </div>
+        )}
+      </Card>
+
+      {/* Engagement Stats */}
+      <Card variant="default" padding="lg" className="mb-6">
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border-subtle">
+          <div className="w-12 h-12 rounded-lg bg-accent-subtle flex items-center justify-center">
+            <BarChart3 className="w-6 h-6 text-accent" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-text-primary">
+              Engagement Stats
+            </h2>
+            <p className="text-sm text-text-muted">
+              Aggregated activity across all company users.
+            </p>
+          </div>
+        </div>
+
+        {statsLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="w-6 h-6 animate-spin text-accent" />
+          </div>
+        ) : statsData?.stats ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <GraduationCap className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Onboarded</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">
+                {statsData.stats.onboardedUsers}
+                <span className="text-sm font-normal text-text-muted ml-1">
+                  / {statsData.stats.totalUsers} users
+                </span>
+              </p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <Play className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Videos Sent</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">{statsData.stats.videosSent}</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <Eye className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Videos Watched</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">{statsData.stats.videosWatched}</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircle2 className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Videos Completed</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">{statsData.stats.videosCompleted}</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <HelpCircle className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Questions Answered</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">
+                {statsData.stats.questionsAnswered}
+                <span className="text-sm font-normal text-text-muted ml-1">
+                  ({statsData.stats.questionsCorrect} correct)
+                </span>
+              </p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <Target className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Correctness</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">{statsData.stats.correctnessRate}%</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-bg-elevated border border-border-subtle">
+              <div className="flex items-center gap-2 mb-1">
+                <Flame className="w-4 h-4 text-text-muted" />
+                <p className="text-xs text-text-muted uppercase tracking-wider">Avg Streak</p>
+              </div>
+              <p className="text-2xl font-bold text-text-primary">{statsData.stats.averageStreak}</p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted">No stats available.</p>
         )}
       </Card>
 
