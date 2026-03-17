@@ -10,6 +10,8 @@ import {
   Play,
   Globe2,
   Building2,
+  GraduationCap,
+  AlertTriangle,
 } from 'lucide-react'
 import { useVideos, useDeleteVideo } from '../../../hooks'
 import {
@@ -55,7 +57,9 @@ function VideosPage() {
     )
   }
 
-  const videos = data?.videos || []
+  const allVideos = data?.videos || []
+  const inductionVideo = allVideos.find((v) => v.isInduction)
+  const videos = allVideos.filter((v) => !v.isInduction)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -83,6 +87,57 @@ function VideosPage() {
           </Link>
         }
       />
+
+      {/* Induction Video Section */}
+      {inductionVideo ? (
+        <Card variant="default" padding="lg" className="mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-accent-subtle flex items-center justify-center">
+              <GraduationCap className="w-6 h-6 text-accent" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-text-muted uppercase tracking-wider mb-1">
+                Induction Video
+              </p>
+              <Link
+                to="/videos/$videoId"
+                params={{ videoId: inductionVideo.id }}
+                className="text-text-primary font-semibold hover:text-accent transition-colors"
+              >
+                {inductionVideo.title}
+              </Link>
+            </div>
+            <div className="flex items-center gap-3">
+              {isPublished(inductionVideo.publishDate) ? (
+                <Badge variant="success">Published</Badge>
+              ) : (
+                <Badge variant="warning">Scheduled</Badge>
+              )}
+              <Link
+                to="/videos/$videoId"
+                params={{ videoId: inductionVideo.id }}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  rightIcon={<ChevronRight className="w-4 h-4" />}
+                >
+                  Edit
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <Alert variant="warning" className="mb-6">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            <span>
+              <strong>No induction video configured.</strong> Users won't receive onboarding content. Set a video as the induction video from its edit page.
+            </span>
+          </div>
+        </Alert>
+      )}
 
       {videos.length === 0 ? (
         <Card variant="default" padding="lg" className="text-center py-12">
@@ -189,6 +244,8 @@ function VideosPage() {
                         icon={<Trash2 className="w-4 h-4" />}
                         onClick={() => setDeleteTarget(video)}
                         className="text-status-error hover:bg-status-error-bg"
+                        disabled={video.isInduction}
+                        label={video.isInduction ? "Cannot delete induction video" : `Delete ${video.title}`}
                       />
                     </div>
                   </TableCell>

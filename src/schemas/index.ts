@@ -247,6 +247,7 @@ export const videoBaseSchema = z.object({
   thumbnailUrl: z.string().nullable().optional(),
   publishDate: z.string(),
   companyId: z.string().nullable(), // null = visible to everyone
+  isInduction: z.boolean().optional(),
   metadata: z.record(z.string(), z.string()).nullable().optional(),
   srt: z.string().nullable().optional(),
   createdAt: z.string(),

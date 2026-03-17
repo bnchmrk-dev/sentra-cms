@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Tag,
   Captions,
+  GraduationCap,
 } from 'lucide-react'
 import {
   useVideo,
@@ -25,6 +26,7 @@ import {
   useReplaceVideoFile,
   useUploadThumbnail,
   useDeleteVideo,
+  useSetInductionVideo,
   useCompanies,
   useTeamsConversations,
   useSendTeamsVideo,
@@ -57,6 +59,7 @@ function VideoDetailPage() {
   const replaceFile = useReplaceVideoFile()
   const uploadThumbnail = useUploadThumbnail()
   const deleteVideo = useDeleteVideo()
+  const setInduction = useSetInductionVideo()
 
   // Teams bot hooks
   const { data: conversationsData, isLoading: conversationsLoading } =
@@ -72,6 +75,7 @@ function VideoDetailPage() {
   )
   const [isInitialized, setIsInitialized] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showInductionModal, setShowInductionModal] = useState(false)
   const [showTeamsModal, setShowTeamsModal] = useState(false)
   const [selectedTeamsUser, setSelectedTeamsUser] = useState<string | null>(
     null,
@@ -331,6 +335,22 @@ function VideoDetailPage() {
         description="Update video details and replace the file if needed."
         actions={
           <div className="flex items-center gap-2">
+            {video.isInduction ? (
+              <Badge variant="live" dot>
+                <GraduationCap className="w-3 h-3 mr-1" />
+                Induction Video
+              </Badge>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<GraduationCap className="w-4 h-4" />}
+                onClick={() => setShowInductionModal(true)}
+                isLoading={setInduction.isPending}
+              >
+                Set as Induction
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="sm"
@@ -652,6 +672,8 @@ function VideoDetailPage() {
                 variant="ghost"
                 onClick={() => setShowDeleteModal(true)}
                 className="text-status-error hover:bg-status-error-bg"
+                disabled={video.isInduction}
+                title={video.isInduction ? "Cannot delete the induction video" : undefined}
               >
                 Delete Video
               </Button>
@@ -708,6 +730,24 @@ function VideoDetailPage() {
 
         <MetadataEditor videoId={videoId} />
       </Card>
+
+      {/* Set as Induction Confirmation */}
+      <ConfirmModal
+        isOpen={showInductionModal}
+        onClose={() => setShowInductionModal(false)}
+        onConfirm={async () => {
+          try {
+            await setInduction.mutateAsync(videoId)
+            setShowInductionModal(false)
+          } catch {
+            // Error handled by mutation
+          }
+        }}
+        title="Set as Induction Video"
+        description={`Are you sure you want to set "${video.title}" as the induction video? This will replace the current induction video if one is set.`}
+        confirmText="Set as Induction"
+        isLoading={setInduction.isPending}
+      />
 
       {/* Delete Confirmation */}
       <ConfirmModal

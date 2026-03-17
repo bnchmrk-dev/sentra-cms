@@ -211,6 +211,24 @@ export function useUploadThumbnail() {
   })
 }
 
+export function useSetInductionVideo() {
+  const api = useApi()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.patch<VideoResponse>(
+        `/api/videos/${id}/set-induction`,
+        undefined,
+        undefined,
+        videoResponseSchema,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: VIDEOS_KEY })
+    },
+  })
+}
+
 export function useDeleteVideo() {
   const api = useApi()
   const queryClient = useQueryClient()
