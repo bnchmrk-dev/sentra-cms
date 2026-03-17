@@ -71,6 +71,19 @@ export function useDeleteUser() {
   })
 }
 
+export function useResetUser() {
+  const api = useApi()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.post(`/api/users/${id}/reset`, undefined, undefined, messageResponseSchema),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: USERS_KEY })
+    },
+  })
+}
+
 export function useCreateUser() {
   const api = useApi()
   const queryClient = useQueryClient()

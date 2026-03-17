@@ -10,8 +10,9 @@ import {
   Save,
   Mail,
   Calendar,
+  RotateCcw,
 } from "lucide-react";
-import { useUser, useUpdateUserRole, useDeleteUser, useCompany } from "../../../hooks";
+import { useUser, useUpdateUserRole, useDeleteUser, useResetUser, useCompany } from "../../../hooks";
 import {
   Card,
   Button,
@@ -51,9 +52,11 @@ function UserDetailPage() {
   const { data, isLoading, error } = useUser(userId);
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
+  const resetUser = useResetUser();
 
   const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const user = data?.user;
   const { data: companyData } = useCompany(user?.companyId);
@@ -104,6 +107,15 @@ function UserDetailPage() {
     try {
       await deleteUser.mutateAsync(userId);
       navigate({ to: "/users" });
+    } catch {
+      // Error handled by mutation
+    }
+  };
+
+  const handleReset = async () => {
+    try {
+      await resetUser.mutateAsync(userId);
+      setShowResetConfirm(false);
     } catch {
       // Error handled by mutation
     }
@@ -272,17 +284,49 @@ function UserDetailPage() {
         <h2 className="text-lg font-semibold text-status-error mb-2">
           Danger Zone
         </h2>
-        <p className="text-sm text-text-muted mb-4">
-          Deleting a user will remove their account from your database. They will need to sign up again to regain access.
-        </p>
-        <Button
-          variant="danger"
-          leftIcon={<Trash2 className="w-4 h-4" />}
-          onClick={() => setShowDeleteConfirm(true)}
-        >
-          Delete User
-        </Button>
+
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm text-text-muted mb-2">
+              Reset this user's onboarding state and clear all their progress data. The user account will be preserved.
+            </p>
+            <Button
+              variant="danger"
+              leftIcon={<RotateCcw className="w-4 h-4" />}
+              onClick={() => setShowResetConfirm(true)}
+            >
+              Reset User
+            </Button>
+            {resetUser.error && (
+              <Alert variant="error" className="mt-2">{resetUser.error.message}</Alert>
+            )}
+          </div>
+
+          <div className="pt-4 border-t border-border-subtle">
+            <p className="text-sm text-text-muted mb-2">
+              Deleting a user will remove their account from your database. They will need to sign up again to regain access.
+            </p>
+            <Button
+              variant="danger"
+              leftIcon={<Trash2 className="w-4 h-4" />}
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Delete User
+            </Button>
+          </div>
+        </div>
       </Card>
+
+      {/* Reset Confirmation */}
+      <ConfirmModal
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={handleReset}
+        title="Reset User"
+        description={`Are you sure you want to reset ${user.email}? This will clear all their video progress, quiz responses, and onboarding state. The user account itself will be preserved.`}
+        confirmText="Reset User"
+        isLoading={resetUser.isPending}
+      />
 
       {/* Delete Confirmation */}
       <ConfirmModal
