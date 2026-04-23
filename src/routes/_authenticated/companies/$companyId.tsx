@@ -18,6 +18,7 @@ import {
   Target,
   Flame,
   GraduationCap,
+  ChevronRight,
 } from "lucide-react";
 import {
   useCompany,
@@ -26,6 +27,8 @@ import {
   useDeleteCompany,
   useAddDomain,
   useRemoveDomain,
+  useUsers,
+  useDeleteUser,
 } from "../../../hooks";
 import {
   Card,
@@ -36,9 +39,27 @@ import {
   IconButton,
   ConfirmModal,
   TimezoneSelect,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
 } from "../../../components/ui";
 import { PageHeader } from "../../../components/layout";
-import type { Domain } from "../../../schemas";
+import type { Domain, User, UserRole } from "../../../schemas";
+
+const roleLabels: Record<UserRole, string> = {
+  user: "User",
+  admin: "Admin",
+  superadmin: "Super Admin",
+};
+
+const roleBadgeVariants: Record<UserRole, "default" | "live" | "review"> = {
+  user: "default",
+  admin: "review",
+  superadmin: "live",
+};
 
 export const Route = createFileRoute("/_authenticated/companies/$companyId")({
   component: CompanyDetailPage,
@@ -63,6 +84,20 @@ function CompanyDetailPage() {
   const [newDomain, setNewDomain] = useState("");
   const [removingDomain, setRemovingDomain] = useState<Domain | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteUserTarget, setDeleteUserTarget] = useState<User | null>(null);
+
+  const { data: usersData, isLoading: usersLoading } = useUsers({ companyId });
+  const deleteUser = useDeleteUser();
+
+  const handleDeleteUser = async () => {
+    if (!deleteUserTarget) return;
+    try {
+      await deleteUser.mutateAsync(deleteUserTarget.id);
+      setDeleteUserTarget(null);
+    } catch {
+      // Error handled by mutation
+    }
+  };
 
   // Initialize form when data loads
   const company = data?.company;
@@ -455,6 +490,102 @@ function CompanyDetailPage() {
         )}
       </Card>
 
+      {/* Users */}
+      <Card variant="default" padding="lg" className="mb-6">
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border-subtle">
+          <div className="w-12 h-12 rounded-lg bg-accent-subtle flex items-center justify-center">
+            <Users className="w-6 h-6 text-accent" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-text-primary">
+              Users
+            </h2>
+            <p className="text-sm text-text-muted">
+              Users associated with this company.
+            </p>
+          </div>
+        </div>
+
+        {usersLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="w-6 h-6 animate-spin text-accent" />
+          </div>
+        ) : !usersData?.users.length ? (
+          <div className="text-center py-8 text-text-muted rounded-lg bg-bg-elevated border border-border-subtle">
+            <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>No users in this company yet</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableHead>User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Joined</TableHead>
+              <TableHead align="right">Actions</TableHead>
+            </TableHeader>
+            <TableBody>
+              {usersData.users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <Link
+                      to="/users/$userId"
+                      params={{ userId: user.id }}
+                      className="flex items-center gap-3 group"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-accent-subtle flex items-center justify-center">
+                        <span className="text-sm font-medium text-accent">
+                          {(user.firstName?.[0] || user.email[0]).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-text-primary group-hover:text-accent transition-colors">
+                          {user.firstName && user.lastName
+                            ? `${user.firstName} ${user.lastName}`
+                            : user.email.split("@")[0]}
+                        </p>
+                        <p className="text-xs text-text-muted">{user.email}</p>
+                      </div>
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={roleBadgeVariants[user.role]} dot>
+                      {roleLabels[user.role]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-text-muted text-sm">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </span>
+                  </TableCell>
+                  <TableCell align="right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link to="/users/$userId" params={{ userId: user.id }}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          rightIcon={<ChevronRight className="w-4 h-4" />}
+                        >
+                          Edit
+                        </Button>
+                      </Link>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        label={`Delete ${user.email}`}
+                        onClick={() => setDeleteUserTarget(user)}
+                        className="text-status-error hover:bg-status-error-bg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </IconButton>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
+
       {/* Engagement Stats */}
       <Card variant="default" padding="lg" className="mb-6">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border-subtle">
@@ -584,6 +715,21 @@ function CompanyDetailPage() {
         confirmText="Remove Domain"
         isLoading={removeDomain.isPending}
         error={removeDomain.error?.message}
+      />
+
+      {/* Delete User Confirmation */}
+      <ConfirmModal
+        isOpen={!!deleteUserTarget}
+        onClose={() => {
+          setDeleteUserTarget(null);
+          deleteUser.reset();
+        }}
+        onConfirm={handleDeleteUser}
+        title="Delete User"
+        description={`Are you sure you want to delete ${deleteUserTarget?.email}? This action cannot be undone.`}
+        confirmText="Delete User"
+        isLoading={deleteUser.isPending}
+        error={deleteUser.error?.message}
       />
 
       {/* Delete Company Confirmation */}
